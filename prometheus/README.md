@@ -16,7 +16,7 @@ Before performing the procedure in this topic, you must have installed and confi
   
 
 # Easy steps to setup monitoring to use local port-forward to access Grafana:
-* Download Setup-Monitoring.ps1 https://msazure.visualstudio.com/msk8s/_git/Apps-on-AKS-HCI?path=%2Fprometheus%2FSetup-Monitoring.ps1&version=GBmaster script and save it to local machine.
+* Download Setup-Monitoring.ps1 [Setup-Monitoring.ps1](Setup-Monitoring.ps1) script and save it to local machine.
 * Open a new powershell Admin Windows and run below command
   ```
   .\Setup-Monitoring.ps1 -installMonitoring $true -kubeconfigFile <target cluster kubeconfig file path> -namespace <namespace where monitoring-stack will be installed> -grafanaAdminPasswd <admin password to access Grafana> -forwardingLocalPort <localhost port to access Grafana>
