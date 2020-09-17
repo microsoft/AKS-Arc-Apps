@@ -1,21 +1,15 @@
-# Running NGINX Ingress on PKS k8s clusters with NSX-T
+# Running NGINX Ingress on Kubernetes clusters created using AKS on HCI
 
 ## Prerequisites
 
 Before performing the procedures in this topic, you must have installed and configured the following:
 
-- PKS v1.2+.
-- NSX-T v2.3+.
-- A PKS plan with at least 1 master and 2 worker nodes.
-- Make sure that the k8s cluster is deployed with priviliged access. Deployment of nginx will fail otherwise.
-- Make sure that the k8s cluster is deployed with SecurityContextDeny disabled. Deployment of nginx will fail otherwise.
-
+- AKSHCI v0.9.3.1
+- An AKSHCI Target Kubernetes Cluster with least 1 master and 2 worker nodes.
 
 ## Install nginx
 
-Follow the steps below to run nginx on k8s, side by side NSX-T. Nginx will be exposed outside using virtual servers on NSX-T but nginx will be performing the ingress functionality. NSX-T will just be forwarding all the traffic to nginx.
-
-Run the subsequent commands in this tutorial from the home directory of this tutorial i.e istio.
+Run the subsequent commands in this tutorial from the home directory of this tutorial i.e nginx-ingress.
 
 ### Step 1: Create the nginx Deployment
 
@@ -25,15 +19,13 @@ Firstly, create the namespace for nginx ingress, along with some ConfigMaps, Ser
 $ kubectl apply -f install/mandatory.yaml
 ```
 
-
 ### Step 2: Deploy the nginx service
 
 Then create the nginx service
 ```
 $ kubectl apply -f install/nginx-service.yaml
 ```
-This will expose the nginx POD to NSX-T using type load balancer. After issuing this command, you should be able to see 2 virtual servers in the same k8s cluster's Load Balanncer, with the same IP. One is for http, listening on port 80 and the other virtual server is for https traffic, listening on port 443.
-
+This will expose the nginx POD using type load balancer. 
 
 ### Step 4: Check the nginx POD
 
@@ -53,7 +45,7 @@ Run the following command to get the nginx-ingress IP
 $ kubectl get svc -n ingress-nginx
 
     NAME            TYPE           CLUSTER-IP       EXTERNAL-IP                 PORT(S)                      AGE
-    ingress-nginx   LoadBalancer   10.100.200.82    100.64.16.5,172.26.80.100   80:30212/TCP,443:31995/TCP   18h
+    ingress-nginx   LoadBalancer   10.100.200.82    172.26.80.100                 80:30212/TCP,443:31995/TCP   18h
 ```
 Note down the external IP of the ingress-nginx for your environment. In this case, the nginx ingress LB can be reached at 172.26.80.100 and is listening on port 80 and 443.
 
