@@ -1,4 +1,5 @@
-﻿<#
+// Copyright (c) Microsoft Corporation.// Licensed under the MIT license.
+<#
     .PARAMETER installDashboard
         installDashboard boolean flag
     
