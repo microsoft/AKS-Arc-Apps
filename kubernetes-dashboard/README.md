@@ -11,7 +11,7 @@ Before performing the procedure in this topic, you must have installed and confi
 * Install kubectl.exe and add it to system PATH. 
 
 ## Steps to install Kubernetes Dashboard:
-* Download Setup-Dashboard.ps1 https://msazure.visualstudio.com/msk8s/_git/Apps-on-AKS-HCI?path=%2Fkubernetes-dashboard%2FSetup-Dashboard.ps1&version=GBmaster  script and save it to local machine.
+* Download Setup-Dashboard.ps1 https://github.com/microsoft/AKS-HCI-Apps/blob/main/kubernetes-dashboard/Setup-Dashboard.ps1 script and save it to local machine.
 * Open a new powershell Admin Window and run below command
  ```
  .\Setup-Dashboard.ps1 -installDashboard $true -kubeconfigFile <target cluster kubeconfig file path> -dashboardProxyPort 50051
