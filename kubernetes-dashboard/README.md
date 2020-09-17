@@ -1,16 +1,16 @@
-#Installing Kubernetes Dashboard  in a Kubernetes Cluster created by AKS-HCI
+# Installing Kubernetes Dashboard  in a Kubernetes Cluster created by AKS-HCI
 
 This topic describes how to install Kubernetes Dashboard  in a Kubernetes cluster created by AKS-HCI. 
 
 
 
-##Prerequisites:
+## Prerequisites:
 Before performing the procedure in this topic, you must have installed and configured the following:
 
 * A Kubernetes cluster created with AKS-HCI with at least 1 master and 1 Linux worker nodes.
 * Install kubectl.exe and add it to system PATH. 
 
-##Steps to install Kubernetes Dashboard:
+## Steps to install Kubernetes Dashboard:
 * Download Setup-Dashboard.ps1 https://msazure.visualstudio.com/msk8s/_git/Apps-on-AKS-HCI?path=%2Fkubernetes-dashboard%2FSetup-Dashboard.ps1&version=GBmaster  script and save it to local machine.
 * Open a new powershell Admin Window and run below command
  ```
@@ -38,7 +38,7 @@ Before performing the procedure in this topic, you must have installed and confi
  PS C:\wssd>
  ```
 
- ##Steps to launch a kubernetes Dashboard
+ ## Steps to launch a kubernetes Dashboard
 
  Running the install command will also launch a dashboard proxy on the specified port in the local system.
 
@@ -49,7 +49,7 @@ Before performing the procedure in this topic, you must have installed and confi
  Please make sure you replace the dashboard port with the port you specified in the previous install command.
 
 
-##Steps to retrieve Kubernetes Dashboard Token
+## Steps to retrieve Kubernetes Dashboard Token
 
  Token for the Kubernetes Dashboard can be retrived from the install command or by executing the following command
 
@@ -66,7 +66,7 @@ Before performing the procedure in this topic, you must have installed and confi
  ```
 ![dashboard2](images/dashboard2.jpg)
 
-##Steps to uninstall Kubernetes Dashboard:
+## Steps to uninstall Kubernetes Dashboard:
 
 * Run below command to uninstall Kubernetes Dashboard.
  ```
