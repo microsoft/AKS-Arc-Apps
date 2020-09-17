@@ -44,7 +44,7 @@ Before performing the procedure in this topic, you must have installed and confi
 
  Open a browser and type: http://localhost:50051/api/v1/namespaces/kubernetes-dashboard/services/https:kubernetes-dashboard:/proxy/#!/login
  
-![dashboard1](images/dashboard1.jpg)
+![dashboard1](Images/dashboard1.jpg)
 
  Please make sure you replace the dashboard port with the port you specified in the previous install command.
 
@@ -64,7 +64,7 @@ Before performing the procedure in this topic, you must have installed and confi
  PS C:\wssd> .\Setup-Dashboard.ps1 -getDashboardSecret $true -kubeconfigFile C:\wssd\bugbash1-kubeconfig 
  eyJhbGciOiJSUzI1NiIsImtpZCI6IjU1eU95dk9vUFgtLTBveWxCbktERDVXOHNDZ1JyRTdYWVFEcTNlTTZnelkifQ.eyJpc3MiOiJrdWJlcm5ldGVzL3NlcnZpY2VhY2NvdW50Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9uYW1lc3BhY2UiOiJkZWZhdWx0Iiwia3ViZXJuZXRlcy5 <truncated>
  ```
-![dashboard2](images/dashboard2.jpg)
+![dashboard2](Images/dashboard2.jpg)
 
 ## Steps to uninstall Kubernetes Dashboard:
 
