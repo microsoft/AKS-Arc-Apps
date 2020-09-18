@@ -4,7 +4,7 @@
 
 Before performing the procedures in this topic, you must have installed and configured the following:
 
-- AKSHCI v0.9.3.1
+- AKSHCI +v0.9.3.1
 - An AKSHCI Target Kubernetes Cluster with least 1 master and 2 worker nodes.
 
 ## Install nginx
@@ -96,8 +96,8 @@ The following commands will test the connectivity externally to verify that our 
 1. Populate the IC_IP and IC_HTTPS_PORT variable for the ingress controller. The ingress controller ip(IC_IP) was retrieved in step 5. The cafe application is using port 443 for https traffic
 
     ```
-    $ IC_IP=10.137.198.21
-    $ IC_HTTPS_PORT=443
+    $ $IC_IP="10.137.198.21"
+    $ $IC_HTTPS_PORT=443
     ```
 
 2. Test the coffe PODs
@@ -105,19 +105,19 @@ The following commands will test the connectivity externally to verify that our 
     Issue the command below to curl your PODs. Note that there is coffee in the url which nginx controller is using to direct traffic to the coffee backend PODs. Issuing the command multiple time round robins the request to the 2 coffee backend PODs as defined in cafe.yaml. The "Server address" field in the curl output identifies the backend POD fullfilling the request
 
     ```
-    $ curl --resolve cafe.lab.local:$IC_HTTPS_PORT:$IC_IP https://cafe.lab.local:$IC_HTTPS_PORT/coffee --insecure
-    Server address: 172.25.3.8:80
-    Server name: coffee-56668d6f78-wxvvv
-    Date: 15/Mar/2019:19:05:54 +0000
+    $ curl.exe --resolve cafe.lab.local:$($IC_HTTPS_PORT):$($IC_IP) "https://cafe.lab.local:$($IC_HTTPS_PORT)/coffee" --insecure
+    Server address: 10.244.2.5:80
+    Server name: coffee-755d68dd75-2c2sq
+    Date: 18/Sep/2020:23:25:51 +0000
     URI: /coffee
-    Request ID: 242a10438ab9cc8c93b531db656e9b01
+    Request ID: 477f489b1a19a6c4d90c0285552d626a
     
-    $ curl --resolve cafe.lab.local:$IC_HTTPS_PORT:$IC_IP https://cafe.lab.local:$IC_HTTPS_PORT/coffee --insecure
-    Server address: 172.25.3.9:80
-    Server name: coffee-56668d6f78-rzj27
-    Date: 15/Mar/2019:19:05:55 +0000
+    $ curl.exe --resolve cafe.lab.local:$($IC_HTTPS_PORT):$($IC_IP) "https://cafe.lab.local:$($IC_HTTPS_PORT)/coffee" --insecure
+    Server address: 10.244.1.6:80
+    Server name: coffee-755d68dd75-zqjl7
+    Date: 18/Sep/2020:23:27:23 +0000
     URI: /coffee
-    Request ID: 6d8bafb54e5c7a1c495e0790516cfa88
+    Request ID: 336c0222984c0a1b67e6caec74307235
     ```
     
 
@@ -126,26 +126,20 @@ The following commands will test the connectivity externally to verify that our 
     The cafe.yaml file deployed 3 replicas of the tea POD so issuing the curl command multiple time distributes the request on these 3 PODs. This can be verified using the "Server address" field in the outputs below.
 
     ```
-    $ curl --resolve cafe.lab.local:$IC_HTTPS_PORT:$IC_IP https://cafe.lab.local:$IC_HTTPS_PORT/tea --insecure
-    Server address: 172.25.3.10:80
-    Server name: tea-85f8bf86fd-bskzx
-    Date: 15/Mar/2019:19:12:23 +0000
+    $ curl.exe --resolve cafe.lab.local:$($IC_HTTPS_PORT):$($IC_IP) "https://cafe.lab.local:$($IC_HTTPS_PORT)/tea" --insecure
+    Server address: 10.244.2.6:80
+    Server name: tea-6c74d89d87-96cw9
+    Date: 18/Sep/2020:23:28:04 +0000
     URI: /tea
-    Request ID: e3ca80b2254fc47a96735b99615ebfb4
+    Request ID: 069324034e9333c193ffd6f584f4bae4
     
-    $ curl --resolve cafe.lab.local:$IC_HTTPS_PORT:$IC_IP https://cafe.lab.local:$IC_HTTPS_PORT/tea --insecure
-    Server address: 172.25.3.11:80
-    Server name: tea-85f8bf86fd-wcmqx
-    Date: 15/Mar/2019:19:12:24 +0000
+    $ curl.exe --resolve cafe.lab.local:$($IC_HTTPS_PORT):$($IC_IP) "https://cafe.lab.local:$($IC_HTTPS_PORT)/tea" --insecure
+    Server address: 10.244.2.6:80
+    Server name: tea-6c74d89d87-96cw9
+    Date: 18/Sep/2020:23:28:04 +0000
     URI: /tea
-    Request ID: 546e2deb5e6dc0f11cc677e21b764976
+    Request ID: 069324034e9333c193ffd6f584f4bae4
     
-    $ curl --resolve cafe.lab.local:$IC_HTTPS_PORT:$IC_IP https://cafe.lab.local:$IC_HTTPS_PORT/tea --insecure
-    Server address: 172.25.3.12:80
-    Server name: tea-85f8bf86fd-xw68j
-    Date: 15/Mar/2019:19:12:25 +0000
-    URI: /tea
-    Request ID: ef81fc9439705a2990d3984ec0a0464e
     ```
 
     Alternatively, a DNS entry can be added for cafe.lab.local(hostname used in my environment) to map to 172.26.80.100 to access the url directly from the browser.
