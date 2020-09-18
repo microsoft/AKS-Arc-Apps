@@ -364,11 +364,11 @@ function Uninstall-Monitoring {
     Write-Host "Uninstalling monitoring release"
     Write-Host "& helm.exe --kubeconfig $kubeConfigFile uninstall $global:monitoringRelName -n=$namespace"
     #helm.exe --kubeconfig $kubeConfigFile uninstall $global:monitoringRelName -n$namespace
-    start-process -FilePath "helm.exe" -ArgumentList $("--kubeconfig $kubeConfigFile delete $global:monitoringRelName -n$namespace")
+    start-process -FilePath "helm.exe" -ArgumentList $("--kubeconfig $kubeConfigFile delete $global:monitoringRelName -n$namespace --debug") -Wait
     Write-Host "Monitoring release ""$global:monitoringRelName"" uninstalled"
 
     Write-Host "Deleting cert Secrets"
-    start-process -FilePath "kubectl.exe" -ArgumentList $("--kubeconfig=$kubeConfigFile delete secret etcd-certs -n=$namespace")
+    start-process -FilePath "kubectl.exe" -ArgumentList $("--kubeconfig=$kubeConfigFile delete secret etcd-certs -n=$namespace") -Wait
     #& kubectl.exe --kubeconfig=$kubeConfigFile delete secret etcd-certs -n=$namespace
 
     Write-Host "Uninstalling monitoring CRDS"
