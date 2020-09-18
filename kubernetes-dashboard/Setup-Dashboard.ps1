@@ -1,4 +1,7 @@
-// Copyright (c) Microsoft Corporation.// Licensed under the MIT license.
+
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 <#
     .PARAMETER installDashboard
         installDashboard boolean flag
@@ -76,7 +79,7 @@ function Install-Dashboard
 
     Write-Host $("Starting dashboard proxy")
     Write-Host $("Please close any command window with previous dashboard proxy running!")
-    & start-process -FilePath "$global:kubeCtlFullPath" -ArgumentList "--kubeconfig=$kubeconfig proxy --port $proxyPort"
+    & start-process -FilePath "kubectl.exe" -ArgumentList "--kubeconfig=$kubeconfig proxy --port $proxyPort"
 
     Write-Host $("Dashboard is available at: http://localhost:$proxyPort/api/v1/namespaces/kubernetes-dashboard/services/https:kubernetes-dashboard:/proxy/#!/login")
 
@@ -289,7 +292,7 @@ if (($installDashboard -eq $false -and $uninstallDashboard -eq $false -and $getD
 
 try {
     if ($installDashboard -eq $true) {        
-        Install-Dashboard -kubeconfigFile $kubeconfigFile -proxyPort $dashboardProxyPort
+        Install-Dashboard -kubeConfigFile $kubeconfigFile -proxyPort $dashboardProxyPort
     }
     elseif ($uninstallDashboard -eq $true) {
         Uninstall-Dashboard -kubeConfigFile $kubeconfigFile
