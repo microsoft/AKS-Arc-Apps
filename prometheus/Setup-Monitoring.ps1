@@ -96,10 +96,10 @@ function Install-Monitoring {
     }
     
     Write-Host "Retrieving ETCD credenatils"
-    $podname = $(kubectl get pods -o=jsonpath='{.items[0].metadata.name}' -l component=kube-apiserver -n kube-system)
-    kubectl exec $podname -n=kube-system -- cat /etc/kubernetes/pki/etcd/ca.crt > ca.crt
-    kubectl exec $podname -nkube-system -- cat /etc/kubernetes/pki/apiserver-etcd-client.crt > client.crt
-    kubectl exec $podname -nkube-system -- cat /etc/kubernetes/pki/apiserver-etcd-client.key > client.key
+    $podname = $(kubectl.exe --kubeconfig=$kubeConfigFile get pods -o=jsonpath='{.items[0].metadata.name}' -l component=kube-apiserver -n kube-system)
+    kubectl.exe --kubeconfig=$kubeConfigFile exec $podname -n=kube-system -- cat /etc/kubernetes/pki/etcd/ca.crt > ca.crt
+    kubectl.exe --kubeconfig=$kubeConfigFile exec $podname -nkube-system -- cat /etc/kubernetes/pki/apiserver-etcd-client.crt > client.crt
+    kubectl.exe --kubeconfig=$kubeConfigFile exec $podname -nkube-system -- cat /etc/kubernetes/pki/apiserver-etcd-client.key > client.key
 
     $caContent = get-content .\ca.crt -Encoding UTF8 -Raw
     $caContentBytes = [System.Text.Encoding]::UTF8.GetBytes($caContent)
@@ -129,7 +129,7 @@ data:
     $etcdcertyaml = [IO.Path]::GetTempFileName() | Rename-Item -NewName { $_ -replace 'tmp$', 'yaml' } -PassThru
     Set-Content -Path $etcdcertyaml -Value $etcdcert
     Write-Host "Creating etcd secret"
-    kubectl create -f $etcdcertyaml
+    kubectl.exe --kubeconfig=$kubeConfigFile create -f $etcdcertyaml
     rm $etcdcertyaml
 
     $custom = @"
