@@ -31,8 +31,8 @@ This will expose the nginx POD using type load balancer.
 
 ```
 kubectl get pods --all-namespaces -l app.kubernetes.io/name=ingress-nginx --watch
-NAMESPACE       NAME                                        READY     STATUS    RESTARTS   AGE
-ingress-nginx   nginx-ingress-controller-56c5c48c4d-b4hsp   1/1       Running   0          1h
+NAMESPACE       NAME                                       READY   STATUS    RESTARTS   AGE
+ingress-nginx   nginx-ingress-controller-8f68db9b5-8f2m7   0/1     Running   0          15s
 ```
 The status of ingress-nginx POD is Running which means the nginx ingress controller was deployed susccessfully
 
@@ -44,10 +44,10 @@ Run the following command to get the nginx-ingress IP
 ```
 $ kubectl get svc -n ingress-nginx
 
-    NAME            TYPE           CLUSTER-IP       EXTERNAL-IP                 PORT(S)                      AGE
-    ingress-nginx   LoadBalancer   10.100.200.82    172.26.80.100                 80:30212/TCP,443:31995/TCP   18h
+    NAME            TYPE           CLUSTER-IP      EXTERNAL-IP     PORT(S)                      AGE
+    ingress-nginx   LoadBalancer   10.106.174.75   10.137.198.21   80:30623/TCP,443:30102/TCP   22s
 ```
-Note down the external IP of the ingress-nginx for your environment. In this case, the nginx ingress LB can be reached at 172.26.80.100 and is listening on port 80 and 443.
+Note down the external IP of the ingress-nginx for your environment. In this case, the nginx ingress LB can be reached at 10.137.198.21 and is listening on port 80 and 443.
 
 
 ### Step 6: Deploying the cafe application
@@ -79,13 +79,13 @@ Note down the external IP of the ingress-nginx for your environment. In this cas
     ```
     $ kubectl get pods
 
-        NAME                                        READY     STATUS    RESTARTS   AGE
-        coffee-56668d6f78-rzj27                     1/1       Running   0          2m46s
-        coffee-56668d6f78-wxvvv                     1/1       Running   0          2m46s
-        nginx-ingress-controller-56c5c48c4d-b4hsp   1/1       Running   0          18h
-        tea-85f8bf86fd-bskzx                        1/1       Running   0          2m46s
-        tea-85f8bf86fd-wcmqx                        1/1       Running   0          2m46s
-        tea-85f8bf86fd-xw68j                        1/1       Running   0          2m46s
+        NAME                                       READY   STATUS    RESTARTS   AGE
+        coffee-755d68dd75-2c2sq                    1/1     Running   0          118s
+        coffee-755d68dd75-zqjl7                    1/1     Running   0          118s
+        nginx-ingress-controller-8f68db9b5-8f2m7   1/1     Running   0          5m37s
+        tea-6c74d89d87-96cw9                       1/1     Running   0          118s
+        tea-6c74d89d87-lsvzx                       1/1     Running   0          118s
+        tea-6c74d89d87-srv5q                       1/1     Running   0          118s
     ```
     All pods are showing Running which shows that cafe application was deployed successfully
 
@@ -96,7 +96,7 @@ The following commands will test the connectivity externally to verify that our 
 1. Populate the IC_IP and IC_HTTPS_PORT variable for the ingress controller. The ingress controller ip(IC_IP) was retrieved in step 5. The cafe application is using port 443 for https traffic
 
     ```
-    $ IC_IP=172.26.80.100
+    $ IC_IP=10.137.198.21
     $ IC_HTTPS_PORT=443
     ```
 
