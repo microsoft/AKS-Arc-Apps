@@ -52,6 +52,7 @@ start-process -FilePath "kubectl.exe" -ArgumentList "--kubeconfig=C:\wssd\myclus
   .\Setup-Monitoring.ps1 -uninstallMonitoring $true -kubeconfigFile C:\wssd\mycluster-kubeconfig -namespace monitoring
   ```
 
+### To configure the Windows monitoring go to https://github.com/microsoft/AKS-HCI-Apps/tree/main/prometheus#windows-monitoring ###
 
 # Detailed steps to setup monitoring to use ingress controller to access Grafana:
 ## Certificate Manager
