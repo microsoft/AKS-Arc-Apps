@@ -35,7 +35,13 @@ View the list of available dashboards.
 Click on a dashboard to see the Grafana view with statistics being collected by Prometheus.
 ![grafana-05](images/grafana-05.jpg)
 
+***Note: Please run below powershell command to restart Grafana port-forward If it is terminated for any reason.***
 
+```
+start-process -FilePath "kubectl.exe" -ArgumentList "--kubeconfig=<target cluster kubeconfig file path> port-forward svc/prometheus-grafana <forwardingLocalPort>:80 -n=<namespace>"
+e.g.
+start-process -FilePath "kubectl.exe" -ArgumentList "--kubeconfig=C:\wssd\mycluster-kubeconfig port-forward svc/prometheus-grafana 3000:80 -n=monitoring"
+```
 ## Steps to uninstall monitoring:
 
 * Run below command to uninstall monitoring stack.
@@ -566,7 +572,7 @@ helm install prometheus prometheus-community/kube-prometheus-stack --namespace m
 If there is an error during deployment, it could be from a bug in Helm. It is possible for the 5 CRDs that are created by this chart to fail. Not allowing time to get fully deployed before Helm attempts to create resources that require them. A simple way to remediate this is to delete the current deployment and the associated CRDs.
 
 ```
-helm delete --purge prometheus
+helm delete prometheus
 kubectl delete crd prometheuses.monitoring.coreos.com
 kubectl delete crd prometheusrules.monitoring.coreos.com
 kubectl delete crd servicemonitors.monitoring.coreos.com
@@ -578,24 +584,24 @@ kubectl delete crd thanosrulers.monitoring.coreos.com
   * Try again using the helm installation:
 
   ```
-helm install prometheus stable/prometheus-operator --namespace monitoring -f custom.yaml
+helm install prometheus prometheus-community/kube-prometheus-stack --namespace monitoring -f custom.yaml
   ```
 
   * If installation fails again, delete the installation and the CRDs once more. Try manually creating the CRDs. Wait for CRDs to be created, which should only take a few seconds
 
   ```
-kubectl create -f https://raw.githubusercontent.com/helm/charts/master/stable/prometheus-operator/crds/crd-alertmanager.yaml
-kubectl create -f https://raw.githubusercontent.com/helm/charts/master/stable/prometheus-operator/crds/crd-podmonitor.yaml
-kubectl create -f https://raw.githubusercontent.com/helm/charts/master/stable/prometheus-operator/crds/crd-prometheus.yaml
-kubectl create -f https://raw.githubusercontent.com/helm/charts/master/stable/prometheus-operator/crds/crd-prometheusrules.yaml
-kubectl create -f https://raw.githubusercontent.com/helm/charts/master/stable/prometheus-operator/crds/crd-servicemonitor.yaml
-kubectl create -f https://raw.githubusercontent.com/helm/charts/master/stable/prometheus-operator/crds/crd-thanosrulers.yaml
+kubectl create -f https://raw.githubusercontent.com/prometheus-community/helm-charts/main/charts/kube-prometheus-stack/crds/crd-alertmanager.yaml
+kubectl create -f https://raw.githubusercontent.com/prometheus-community/helm-charts/main/charts/kube-prometheus-stack/crds/crd-podmonitor.yaml
+kubectl create -f https://raw.githubusercontent.com/prometheus-community/helm-charts/main/charts/kube-prometheus-stack/crds/crd-prometheus.yaml
+kubectl create -f https://raw.githubusercontent.com/prometheus-community/helm-charts/main/charts/kube-prometheus-stack/crds/crd-prometheusrules.yaml
+kubectl create -f https://raw.githubusercontent.com/prometheus-community/helm-charts/main/charts/kube-prometheus-stack/crds/crd-servicemonitor.yaml
+kubectl create -f https://raw.githubusercontent.com/prometheus-community/helm-charts/main/charts/kube-prometheus-stack/crds/crd-thanosrulers.yaml
   ```
 
   * Install the Prometheus Operator using helm chart and reference the `custom.yaml` but disable the CRD provisioning.
 
   ```
-helm install prometheus stable/prometheus-operator --namespace monitoring -f custom.yaml --set prometheusOperator.createCustomResource=false
+helm install prometheus prometheus-community/kube-prometheus-stack --namespace monitoring -f custom.yaml --set prometheusOperator.createCustomResource=false
   ```  
 
 
@@ -675,6 +681,46 @@ Click on a dashboard to see the Grafana view with statistics being collected by 
 ![grafana-05](images/grafana-005.jpg)
 
 
+
+
+### Windows Monitoring ###
+
+Follow below steps to configure the Windows monitoring.
+* Create windows-exporter container image from DockerFile present here [DockerFile](windows\DockerFile) and push it to your repository.
+* Download [windows-exporter-daemonset.yaml](windows\windows-exporter-daemonset.yaml) and update the image name with the one you created above and apply it.
+```
+kubectl.exe --kubeconfig=<target cluster kubeconfig> apply -f windows-exporter-daemonset.yaml
+```
+* Create a file values.yaml as below
+```
+prometheus:
+  prometheusSpec:
+    additionalScrapeConfigs:
+      - job_name: wmi-exporter
+        kubernetes_sd_configs:
+        - role: node
+        scheme: http
+
+        relabel_configs:
+        - action: labelmap
+          regex: __meta_kubernetes_node_label_(.+) 
+          # Use wmi exporter 9182 port
+        - source_labels: [__address__]
+          regex: '(.*):10250'
+          replacement: '${1}:9182'
+          target_label: __address__   
+```
+and update the prometheus helm release.
+```
+helm --kubeconfig <target cluster kubeconfig> upgrade --reuse-values -f .\values.yaml prometheus prometheus-community/kube-prometheus-stack -n=monitoring
+```
+* Apply the file [windows-rules-dashboards.yaml](windows\windows-rules-dashboards.yaml) to the cluster
+```
+kubectl.exe --kubeconfig=<target cluster kubeconfig> apply -f windows-rules-dashboards.yaml
+```
+* Reload the Grafana URL and you should be able to see the Windows monitoring dasboards.
+
+***Note: Windows Monitoring steps above assume that you have installed the prometheus in monitoring namespace. If this is not the case then please update the correct namespace in windows-rules-dashboards.yaml and windows-exporter-daemonset.yaml before applying them..***
 
 ### KubeProxy metrics scrapping
 The metrics bind address of kube-proxy is not enabled by default. You should expose metrics by changing metricsBindAddress field value to 0.0.0.0:10249 if you want to collect them.

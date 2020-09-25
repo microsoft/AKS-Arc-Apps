@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: windows-exporter-ds
+  namespace: monitoring
+  labels:
+    k8s-app: windows-exporter-ds
+spec:
+  selector:
+    matchLabels:
+      name: windows-exporter-ds
+  template:
+    metadata:
+      labels:
+        name: windows-exporter-ds
+    spec:
+      containers:
+      - name: windows-exporter
+        image: <windows-exporter-image>
+        imagePullPolicy: Always
+        volumeMounts:
+          - name: wins-pipe
+            mountPath: \\.\pipe\rancher_wins
+          - name: exporter-host-path
+            mountPath: c:/host/etc/windows-exporter
+      nodeSelector:
+        kubernetes.io/os: windows
+      volumes:
+      - name: wins-pipe
+        hostPath:
+          path: \\.\pipe\rancher_wins
+
+      - name: exporter-host-path
+        hostPath:
+          path: c:/etc/windows-exporter
+          type: DirectoryOrCreate

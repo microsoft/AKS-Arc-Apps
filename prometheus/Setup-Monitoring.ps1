@@ -253,7 +253,7 @@ kubeEtcd:
         {
             break
         }
-        Start-Sleep 15
+        Start-Sleep -Seconds 15
     }
     Write-Host "Pod 'Grafana' is ready."
 
