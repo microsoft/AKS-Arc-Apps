@@ -686,8 +686,8 @@ Click on a dashboard to see the Grafana view with statistics being collected by 
 ### Windows Monitoring ###
 
 Follow below steps to configure the Windows monitoring.
-* Create windows-exporter container image from DockerFile present here [DockerFile](windows\DockerFile) and push it to your repository.
-* Download [windows-exporter-daemonset.yaml](windows\windows-exporter-daemonset.yaml) and update the image name with the one you created above and apply it.
+* Create windows-exporter container image from DockerFile present here [DockerFile](windows/DockerFile) and push it to your repository.
+* Download [windows-exporter-daemonset.yaml](windows/windows-exporter-daemonset.yaml) and update the image name with the one you created above and apply it.
 ```
 kubectl.exe --kubeconfig=<target cluster kubeconfig> apply -f windows-exporter-daemonset.yaml
 ```
@@ -714,7 +714,7 @@ and update the prometheus helm release.
 ```
 helm --kubeconfig <target cluster kubeconfig> upgrade --reuse-values -f .\values.yaml prometheus prometheus-community/kube-prometheus-stack -n=monitoring
 ```
-* Apply the file [windows-rules-dashboards.yaml](windows\windows-rules-dashboards.yaml) to the cluster
+* Apply the file [windows-rules-dashboards.yaml](windows/windows-rules-dashboards.yaml) to the cluster
 ```
 kubectl.exe --kubeconfig=<target cluster kubeconfig> apply -f windows-rules-dashboards.yaml
 ```
