@@ -29,20 +29,20 @@ Before performing the procedure in this topic, you must have installed and confi
 To access Kibana, enter `https://localhost:5601/` in web browser
 
 Accept the series of `NET::ERR_CERT_AUTHORITY_INVALID` warnings because this example uses a fake CA.
-![kibana-01](images/image01.png)
+![kibana-01](images/image01.PNG)
 
 Enter the Kibana dashboard with Username/Password.
-![kibana-02](images/image02.png)
+![kibana-02](images/image02.PNG)
 
 Connect to your Elasticsearch index.
-![kibana-03](images/image03.png)
+![kibana-03](images/image03.PNG)
 
 Create Index Pattern
 
 Configure the index with filebeat* using @timestamp as the Time field filter.
 
 Go to Discover and you can now add your custom filters like the one in the screenshot below
-![kibana-03](images/image04.png)
+![kibana-03](images/image04.PNG)
 
 ## Steps to uninstall logging:
 
