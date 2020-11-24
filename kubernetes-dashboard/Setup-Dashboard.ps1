@@ -79,7 +79,7 @@ function Install-Dashboard
 
     Write-Host $("Starting dashboard proxy")
     Write-Host $("Please close any command window with previous dashboard proxy running!")
-    & start-process -FilePath "kubectl.exe" -ArgumentList "--kubeconfig=$kubeconfig proxy --port $proxyPort"
+    & start-process -FilePath "kubectl.exe" -ArgumentList "--kubeconfig=$kubeConfigFile proxy --port $proxyPort"
 
     Write-Host $("Dashboard is available at: http://localhost:$proxyPort/api/v1/namespaces/kubernetes-dashboard/services/https:kubernetes-dashboard:/proxy/#!/login")
 
