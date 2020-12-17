@@ -1,8 +1,8 @@
-We recommend EFK (Elastic-search, Filebeat and Kibana) to setup containers logging on the cluster.
+We recommend EFK (Elastic-search, Fluent-bit and Kibana) to setup containers logging on the cluster.
 
 Elastic-search - Stores the logs.
 
-Filebeat - Forwards the containers logs to Elastic-search cluster.
+Fluent-bit - Forwards the containers logs to Elastic-search cluster.
 
 Kibana - Elastic-search UI to view the logs.
 
@@ -18,13 +18,13 @@ Before performing the procedure in this topic, you must have installed and confi
 
 # Easy steps to setup logging to use local port-forward to access Kibana:
 ***Note: Below script configure 3 nodes elastic search cluster and 50Gi storage for each elastic search node. Please modify the below script if you want different configuration.***
-* Download [Setup-es-kibana-filebeat.ps1](Setup-es-kibana-filebeat.ps1) script and save it to local machine.
+* Download [Setup-es-kibana-fluent-bit.ps1](Setup-es-kibana-fluent-bit.ps1) script and save it to local machine.
 * Open a new powershell Admin Windows and run below command
   ```
-  .\Setup-es-kibana-filebeat.ps1 -installLogging $true -kubeconfigFile <target cluster kubeconfig file path> -namespace <namespace where logging-stack will be installed>
+  .\Setup-es-kibana-fluent-bit.ps1 -installLogging $true -kubeconfigFile <target cluster kubeconfig file path> -namespace <namespace where logging-stack will be installed>
 
   e.g. 
-  .\Setup-es-kibana-filebeat.ps1 -installLogging $true -kubeconfigFile .\mycluster-kubeconfig -namespace logging
+  .\Setup-es-kibana-fluent-bit.ps1 -installLogging $true -kubeconfigFile .\mycluster-kubeconfig -namespace logging
   ```
 To access Kibana, enter `https://localhost:5601/` in web browser
 
@@ -39,7 +39,7 @@ Connect to your Elasticsearch index.
 
 Create Index Pattern
 
-Configure the index with filebeat* using @timestamp as the Time field filter.
+Configure the index with kubernetes_cluster* using @timestamp as the Time field filter.
 
 Go to Discover and you can now add your custom filters like the one in the screenshot below
 ![kibana-03](images/image04.PNG)
@@ -48,14 +48,14 @@ Go to Discover and you can now add your custom filters like the one in the scree
 
 * Run below command to uninstall loggingg stack.
   ```
-  .\Setup-es-kibana-filebeat.ps1 -uninstallLogging $true -kubeconfigFile <target cluster kubeconfig file path> -namespace <namespace where logging-stack will be installed>
+  .\Setup-es-kibana-fluent-bit.ps1 -uninstallLogging $true -kubeconfigFile <target cluster kubeconfig file path> -namespace <namespace where logging-stack will be installed>
 
   e.g. 
-  .\Setup-es-kibana-filebeat.ps1 -uninstallLogging $true -kubeconfigFile .\mycluster-kubeconfig -namespace logging
+  .\Setup-es-kibana-fluent-bit.ps1 -uninstallLogging $true -kubeconfigFile .\mycluster-kubeconfig -namespace logging
   ```
 
 # Detailed steps to setup logging:
 
 * Detailed steps to configure elasticsearch cluster and kibana can be found here https://www.elastic.co/blog/introducing-elastic-cloud-on-kubernetes-the-elasticsearch-operator-and-beyond
-* Detailed steps to configure Filebeat https://github.com/elastic/helm-charts/tree/master/filebeat
+* Detailed steps to configure fluent-bit https://github.com/fluent/helm-charts/tree/master/charts/fluent-bit
 

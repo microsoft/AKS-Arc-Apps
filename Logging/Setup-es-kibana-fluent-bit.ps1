@@ -152,14 +152,28 @@ spec:
 
   ## wait for ES cluster to be healthy
   Write-Host "waiting for ES cluster to be healthy."
-  while ($true) {
-    $result = (Execute-KubeCtl -ignoreError -kubeconfig $kubeconfigFile -arguments $("wait --for=condition=Ready --timeout=1m -n $namespace pod -l common.k8s.elastic.co/type=elasticsearch"))
-    if ($result -ne $null) {
+  Start-Sleep -Seconds 30
+  for($i = 0; $i -le 10; $i++) {
+    $pods = ((& kubectl.exe --kubeconfig=$kubeConfigFile get pods -n $namespace -l common.k8s.elastic.co/type=elasticsearch -o json) | ConvertFrom-Json) 2>$null
+    $runnigPodsCount = 0
+    foreach ( $pod in $pods.items) {
+      if ($pod.status.phase -ieq "Running") {
+          $runnigPodsCount++
+      }
+    }
+    Write-Host "$runnigPodsCount pods are running" 
+    if($runnigPodsCount -eq 3)
+    {
       break
+    }
+    if($i -eq 9)
+    {
+      throw "elasticsearch is not in ready state"
     }
     Write-Host "waiting for ES cluster to be healthy."
     Start-Sleep -Seconds 15
   }
+  
   Write-Host "ES cluster is healthy." -ForegroundColor Green
 
   ## deploy kibana
@@ -187,65 +201,122 @@ spec:
   Remove-Item $kibanayamlFile
   ## wait for kibana to be healthy
   Write-Host "waiting for kibana to be ready."
-  while ($true) {
-    $result = (Execute-KubeCtl -ignoreError -kubeconfig $kubeconfigFile -arguments $("wait --for=condition=Ready --timeout=1m -n $namespace pod -l kibana.k8s.elastic.co/name=kibana"))
-    if ($result -ne $null) {
+  Start-Sleep -Seconds 30
+  for($i = 0; $i -le 10; $i++) {
+    $pods = ((& kubectl.exe --kubeconfig=$kubeConfigFile get pods -n $namespace -l kibana.k8s.elastic.co/name=kibana -o json) | ConvertFrom-Json) 2>$null
+    $runnigPodsCount = 0
+    foreach ( $pod in $pods.items) {
+      if ($pod.status.phase -ieq "Running") {
+          $runnigPodsCount++
+      }
+    }
+    if($runnigPodsCount -eq 1)
+    {
       break
+    }
+    if($i -eq 9)
+    {
+      throw "Kibana is not in ready state"
     }
     Write-Host "waiting for kibana to be ready."
     Start-Sleep -Seconds 15
   }
+  
   Write-Host "kibana pod is ready." -ForegroundColor Green
 
-  ## install filebeat using helm
-  Write-Host "installing filebeat using helm"
+  ## install fluent-bit using helm
+  Write-Host "installing fluent-bit using helm"
   
   ## get the elastic-cluster password. username is elastic
 
   $PASSWORD=$(kubectl.exe --kubeconfig=$kubeConfigFile get secret elastic-cluster-es-elastic-user --namespace $namespace -o go-template='{{.data.elastic | base64decode}}')
-  $filebeatvaluesYaml=@"
-  filebeatConfig:
-    filebeat.yml: |
-      filebeat.inputs:
-      - type: container
-        paths:
-          - /var/log/containers/*.log
-        processors:
-        - add_kubernetes_metadata:
-            host: `${NODE_NAME}
-            matchers:
-            - logs_path:
-                logs_path: "/var/log/containers/"
-      output.elasticsearch:
-        username: elastic
-        password: $PASSWORD
-        protocol: https
-        hosts: ["elastic-cluster-es-http:9200"]
-        ssl.verification_mode: "none"
-  nodeSelector:
-    kubernetes.io/os: linux
-  hostNetworking: true
-  tolerations: 
-    - effect: NoSchedule
-      operator: Exists
+  $fluentbitvaluesYaml=@"
+config:
+  ## https://docs.fluentbit.io/manual/service
+  service: |
+    [SERVICE]
+        Flush 1
+        Daemon Off
+        Log_Level Info
+        Parsers_File parsers.conf
+        Parsers_File custom_parsers.conf
+        HTTP_Server On
+        HTTP_Listen 0.0.0.0
+        HTTP_Port 2020
+  ## https://docs.fluentbit.io/manual/pipeline/inputs
+  inputs: |
+    [INPUT]
+        Name tail
+        Path /var/log/containers/*.log
+        Parser docker
+        Tag kube.*
+        Mem_Buf_Limit 5MB
+        Skip_Long_Lines On
+  ## https://docs.fluentbit.io/manual/pipeline/filters
+  filters: |
+    [FILTER]
+        Name kubernetes
+        Match kube.*
+        Merge_Log On
+        Keep_Log Off
+        K8S-Logging.Parser On
+        K8S-Logging.Exclude On
+  ## https://docs.fluentbit.io/manual/pipeline/outputs
+  outputs: |
+    [OUTPUT]
+        Name  es
+        Match kube.*
+        Host elastic-cluster-es-http
+        Port 9200
+        Logstash_Format On
+        Retry_Limit False
+        Type  flb_type
+        Time_Key @timestamp
+        Replace_Dots On
+        Logstash_Prefix kubernetes_cluster
+        Index kubernetes_cluster
+        HTTP_User elastic
+        HTTP_Passwd $PASSWORD
+        tls On
+        tls.verify Off
+nodeSelector:
+  kubernetes.io/os: linux
+tolerations:
+  - effect: NoSchedule
+    operator: Exists
 "@
   $customyamlFile = [IO.Path]::GetTempFileName() | Rename-Item -NewName { $_ -replace 'tmp$', 'yaml' } -PassThru
-  Set-Content -Path $customyamlFile -Value $filebeatvaluesYaml
+  Set-Content -Path $customyamlFile -Value $fluentbitvaluesYaml
 
-  helm.exe --kubeconfig $kubeConfigFile repo add elastic https://helm.elastic.co
-  helm.exe --kubeconfig $kubeConfigFile install filebeat --version 7.9.2 elastic/filebeat --namespace $namespace -f $customyamlFile
+  helm.exe --kubeconfig $kubeConfigFile repo add fluent https://fluent.github.io/helm-charts
+  helm.exe --kubeconfig $kubeConfigFile install fluent-bit fluent/fluent-bit --namespace $namespace -f $customyamlFile
 
-  Write-Host "waiting for filebeat to be ready."
-  while ($true) {
-    $result = (Execute-KubeCtl -ignoreError -kubeconfig $kubeconfigFile -arguments $("wait --for=condition=Ready --timeout=1m -n $namespace pod -l app=filebeat-filebeat"))
-    if ($result -ne $null) {
+  
+  Write-Host "waiting for fluent-bit to be ready."
+  Start-Sleep -Seconds 30
+  $linuxNodes = ((& kubectl.exe --kubeconfig=$kubeConfigFile get nodes -n $namespace -l kubernetes.io/os=linux -o json) | ConvertFrom-Json) 2>$null
+  for($i = 0; $i -le 10; $i++) {
+    $pods = ((& kubectl.exe --kubeconfig=$kubeConfigFile get pods -n $namespace -l app.kubernetes.io/name=fluent-bit -o json) | ConvertFrom-Json) 2>$null
+    $runnigPodsCount = 0
+    foreach ( $pod in $pods.items) {
+      if ($pod.status.phase -ieq "Running") {
+          $runnigPodsCount++
+      }
+    }
+    if($runnigPodsCount -eq $linuxNodes.items.Count)
+    {
       break
     }
-    Write-Host "waiting for filebeat to be ready."
+    if($i -eq 9)
+    {
+      throw "fluent-bit is not in ready state"
+    }
+    Write-Host "waiting for fluent-bit to be ready."
     Start-Sleep -Seconds 15
   }
+ 
   Write-Host "filebeat pod is ready." -ForegroundColor Green
-
+ 
   Write-Host "Starting port forwarder for Kibana"
   & start-process -FilePath "kubectl.exe" -ArgumentList $("--kubeconfig=$kubeconfigFile port-forward svc/kibana-kb-http "+$forwardingLocalPort+":"+$forwardingRemotePort+" -n=$namespace")
   Write-Host "Kibana is available at: https://localhost:$forwardingLocalPort/" -ForegroundColor Green
@@ -254,79 +325,6 @@ spec:
   Write-Host $PASSWORD -ForegroundColor Yellow
   Write-Host "UserName is " -NoNewline
   Write-Host "elastic" -ForegroundColor Yellow
-}
-
-function Execute-KubeCtl {
-  <#
-    .DESCRIPTION
-        Executes a kubectl command.
-
-    .PARAMETER kubeconfig
-        The kubeconfig file to use. Defaults to the management kubeconfig.
-
-    .PARAMETER arguments
-        Arguments to pass to the command.
-
-    .PARAMETER ignoreError
-        Optionally, ignore errors from the command (don't throw).
-
-    .PARAMETER showOutput
-        Optionally, show live output from the executing command.
-    #>
-
-  param (
-    [string] $kubeconfig,
-    [string] $arguments,
-    [switch] $ignoreError,
-    [switch] $showOutput
-  )
-
-  return Execute-Command -command kubectl.exe -arguments $("--kubeconfig=$kubeconfig $arguments") -showOutput:$showOutput.IsPresent -ignoreError:$ignoreError.IsPresent
-}
-
-function Execute-Command {
-  <#
-    .DESCRIPTION
-        Executes a command and optionally ignores errors.
-
-    .PARAMETER command
-        Comamnd to execute.
-
-    .PARAMETER arguments
-        Arguments to pass to the command.
-
-    .PARAMETER ignoreError
-        Optionally, ignore errors from the command (don't throw).
-
-    .PARAMETER showOutput
-        Optionally, show live output from the executing command.
-    #>
-
-  param (
-    [String]$command,
-    [String]$arguments,
-    [Switch]$ignoreError,
-    [Switch]$showOutput
-  )
-
-  if ($showOutput.IsPresent) {
-    $result = (& $command $arguments.Split(" ") | Out-Default)
-  }
-  else {
-    $result = (& $command $arguments.Split(" ") 2>&1)
-  }
-
-  $out = $result | ? { $_.gettype().Name -ine "ErrorRecord" }  # On a non-zero exit code, this may contain the error
-  $outString = ($out | Out-String).ToLowerInvariant()
-
-  if ($LASTEXITCODE) {
-    if ($ignoreError.IsPresent) {
-      return
-    }
-    $err = $result | ? { $_.gettype().Name -eq "ErrorRecord" }
-    throw "$command $arguments failed to execute [$err]"
-  }
-  return $out
 }
 
 function Uninstall-Logging {
@@ -350,7 +348,7 @@ function Uninstall-Logging {
   )
 
   Write-Host "Uninstalling logging"
-  helm.exe --kubeconfig $kubeConfigFile delete filebeat --namespace $namespace
+  helm.exe --kubeconfig $kubeConfigFile delete fluent-bit --namespace $namespace
   $esclusteryaml = @"
 apiVersion: elasticsearch.k8s.elastic.co/v1
 kind: Elasticsearch
