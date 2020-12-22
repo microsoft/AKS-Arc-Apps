@@ -65,7 +65,7 @@ There is no public image for fluent-bit windows on docker hub so you need to cre
   * ARG FLUENTBIT_VERSION=1.3.8 to ARG FLUENTBIT_VERSION=1.4.2
   * ENTRYPOINT ["fluent-bit.exe", "-i", "dummy", "-o", "stdout"] to CMD ["/fluent-bit/bin/fluent-bit", "-c", "/fluent-bit/etc/fluent-bit.conf"]
 * Build this DockerFile and push the image to your container registry.
-* Create private container registrty pull image secret e.g. https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
+* Create private container registry pull image secret e.g. https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
 * Download [fluent-bit-windows.ps1](fluent-bit-windows.ps1) script and save it to local machine.
 * Open a new powershell Admin Windows and run below command
   ```
