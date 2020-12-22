@@ -59,3 +59,23 @@ Go to Discover and you can now add your custom filters like the one in the scree
 * Detailed steps to configure elasticsearch cluster and kibana can be found here https://www.elastic.co/blog/introducing-elastic-cloud-on-kubernetes-the-elasticsearch-operator-and-beyond
 * Detailed steps to configure fluent-bit https://github.com/fluent/helm-charts/tree/master/charts/fluent-bit
 
+### Windows Monitoring ###
+There is no public image for fluent-bit windows on docker hub so you need to create the image yourself and push it to some container registry.
+* Download this DockerFile [Dockerfile.windows](https://raw.githubusercontent.com/fluent/fluent-bit/master/Dockerfile.windows) and change below 2 lines 
+  * ARG FLUENTBIT_VERSION=1.3.8 to ARG FLUENTBIT_VERSION=1.4.2
+  * ENTRYPOINT ["fluent-bit.exe", "-i", "dummy", "-o", "stdout"] to CMD ["/fluent-bit/bin/fluent-bit", "-c", "/fluent-bit/etc/fluent-bit.conf"]
+* Build this DockerFile and push the image to your container registry.
+* Create private container registrty pull image secret e.g. https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
+* Download [fluent-bit-windows.ps1](fluent-bit-windows.ps1) script and save it to local machine.
+* Open a new powershell Admin Windows and run below command
+  ```
+  .\fluent-bit-windows.ps1 -installWindowsLogging $true -kubeconfigFile <target cluster kubeconfig file path> -namespace <namespace where logging-stack will be installed> -fluent_bit_docker_image_name <fluent-bit windows container image name> -fluent_bit_docker_image_pull_secret <image pull secret>
+
+  e.g. 
+  .\fluent-bit-windows.ps1 -installWindowsLogging $true -kubeconfigFile .\conf -namespace logging -fluent_bit_docker_image_name sachinnagar/fluent-windows:1.4.2 -fluent_bit_docker_image_pull_secret regcred
+  ```
+  * To uninstall windows fluent-bit run below command
+  ```
+  e.g.
+  .\fluent-bit-windows.ps1 -uninstallWindowsLogging $true -kubeconfigFile .\conf -namespace logging -fluent_bit_docker_image_name sachinnagar/fluent-windows:1.4.2 -fluent_bit_docker_image_pull_secret regcred
+  ```
