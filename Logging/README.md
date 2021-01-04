@@ -59,7 +59,7 @@ Go to Discover and you can now add your custom filters like the one in the scree
 * Detailed steps to configure elasticsearch cluster and kibana can be found here https://www.elastic.co/blog/introducing-elastic-cloud-on-kubernetes-the-elasticsearch-operator-and-beyond
 * Detailed steps to configure fluent-bit https://github.com/fluent/helm-charts/tree/master/charts/fluent-bit
 
-### Windows Monitoring ###
+### Windows Logging ###
 There is no public image for fluent-bit windows on docker hub so you need to create the image yourself and push it to some container registry.
 * Download this DockerFile [Dockerfile.windows](https://raw.githubusercontent.com/fluent/fluent-bit/master/Dockerfile.windows) and change below 2 lines 
   * ARG FLUENTBIT_VERSION=1.3.8 to ARG FLUENTBIT_VERSION=1.4.2
