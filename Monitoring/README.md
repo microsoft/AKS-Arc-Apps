@@ -53,7 +53,45 @@ start-process -FilePath "kubectl.exe" -ArgumentList "--kubeconfig=C:\wssd\myclus
   .\Setup-Monitoring.ps1 -uninstallMonitoring $true -kubeconfigFile C:\wssd\mycluster-kubeconfig -namespace monitoring
   ```
 
-### To configure the Windows monitoring go to https://github.com/microsoft/AKS-HCI-Apps/tree/main/Monitoring#windows-monitoring ###
+### Windows Monitoring ###
+
+Follow below steps to configure the Windows monitoring.
+* Create windows-exporter container image from DockerFile present here [DockerFile](windows/DockerFile) and push it to your repository.
+* Download [windows-exporter-daemonset.yaml](windows/windows-exporter-daemonset.yaml) and update the image name with the one you created above and apply it.
+```
+kubectl.exe --kubeconfig=<target cluster kubeconfig> apply -f windows-exporter-daemonset.yaml
+```
+* Create a file values.yaml as below
+```
+prometheus:
+  prometheusSpec:
+    additionalScrapeConfigs:
+      - job_name: wmi-exporter
+        kubernetes_sd_configs:
+        - role: node
+        scheme: http
+
+        relabel_configs:
+        - action: labelmap
+          regex: __meta_kubernetes_node_label_(.+) 
+          # Use wmi exporter 9182 port
+        - source_labels: [__address__]
+          regex: '(.*):10250'
+          replacement: '${1}:9182'
+          target_label: __address__   
+```
+and update the prometheus helm release.
+```
+helm --kubeconfig <target cluster kubeconfig> upgrade --reuse-values -f .\values.yaml prometheus prometheus-community/kube-prometheus-stack -n=monitoring
+```
+* Apply the file [windows-rules-dashboards.yaml](windows/windows-rules-dashboards.yaml) to the cluster
+```
+kubectl.exe --kubeconfig=<target cluster kubeconfig> apply -f windows-rules-dashboards.yaml
+```
+* Reload the Grafana URL and you should be able to see the Windows monitoring dasboards.
+
+***Note: Windows Monitoring steps above assume that you have installed the prometheus in monitoring namespace. If this is not the case then please update the correct namespace in windows-rules-dashboards.yaml and windows-exporter-daemonset.yaml before applying them..***
+
 
 # Detailed steps to setup monitoring to use ingress controller to access Grafana:
 ## Certificate Manager
@@ -682,47 +720,6 @@ View the list of available dashboards.
 Click on a dashboard to see the Grafana view with statistics being collected by Prometheus.
 ![grafana-05](images/grafana-005.jpg)
 
-
-
-
-### Windows Monitoring ###
-
-Follow below steps to configure the Windows monitoring.
-* Create windows-exporter container image from DockerFile present here [DockerFile](windows/DockerFile) and push it to your repository.
-* Download [windows-exporter-daemonset.yaml](windows/windows-exporter-daemonset.yaml) and update the image name with the one you created above and apply it.
-```
-kubectl.exe --kubeconfig=<target cluster kubeconfig> apply -f windows-exporter-daemonset.yaml
-```
-* Create a file values.yaml as below
-```
-prometheus:
-  prometheusSpec:
-    additionalScrapeConfigs:
-      - job_name: wmi-exporter
-        kubernetes_sd_configs:
-        - role: node
-        scheme: http
-
-        relabel_configs:
-        - action: labelmap
-          regex: __meta_kubernetes_node_label_(.+) 
-          # Use wmi exporter 9182 port
-        - source_labels: [__address__]
-          regex: '(.*):10250'
-          replacement: '${1}:9182'
-          target_label: __address__   
-```
-and update the prometheus helm release.
-```
-helm --kubeconfig <target cluster kubeconfig> upgrade --reuse-values -f .\values.yaml prometheus prometheus-community/kube-prometheus-stack -n=monitoring
-```
-* Apply the file [windows-rules-dashboards.yaml](windows/windows-rules-dashboards.yaml) to the cluster
-```
-kubectl.exe --kubeconfig=<target cluster kubeconfig> apply -f windows-rules-dashboards.yaml
-```
-* Reload the Grafana URL and you should be able to see the Windows monitoring dasboards.
-
-***Note: Windows Monitoring steps above assume that you have installed the prometheus in monitoring namespace. If this is not the case then please update the correct namespace in windows-rules-dashboards.yaml and windows-exporter-daemonset.yaml before applying them..***
 
 ### KubeProxy metrics scrapping
 The metrics bind address of kube-proxy is not enabled by default. You should expose metrics by changing metricsBindAddress field value to 0.0.0.0:10249 if you want to collect them.
