@@ -16,7 +16,7 @@ Before performing the procedure in this topic, you must have installed and confi
   
 
 # Easy steps to setup monitoring to use local port-forward to access Grafana:
-Note: Below script configure 100Gi storage for prometheus instance and 20Gi for grafana.Please modify the below script if you want different configuration
+***Note: Below script configure 100Gi storage for prometheus instance and 20Gi for grafana.***
 * Download [Setup-Monitoring.ps1](Setup-Monitoring.ps1) script and save it to local machine.
 * Open a new powershell Admin Windows and run below command
   ```
