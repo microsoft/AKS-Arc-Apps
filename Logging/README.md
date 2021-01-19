@@ -53,12 +53,6 @@ Go to Discover and you can now add your custom filters like the one in the scree
   e.g. 
   .\Setup-es-kibana-fluent-bit.ps1 -uninstallLogging $true -kubeconfigFile .\mycluster-kubeconfig -namespace logging
   ```
-
-# Detailed steps to setup logging:
-
-* Detailed steps to configure elasticsearch cluster and kibana can be found here https://www.elastic.co/blog/introducing-elastic-cloud-on-kubernetes-the-elasticsearch-operator-and-beyond
-* Detailed steps to configure fluent-bit https://github.com/fluent/helm-charts/tree/master/charts/fluent-bit
-
 ### Windows Logging ###
 There is no public image for fluent-bit windows on docker hub so you need to create the image yourself and push it to some container registry.
 * Download this DockerFile [Dockerfile.windows](https://raw.githubusercontent.com/fluent/fluent-bit/master/Dockerfile.windows) and change below 2 lines 
@@ -79,3 +73,9 @@ There is no public image for fluent-bit windows on docker hub so you need to cre
   e.g.
   .\fluent-bit-windows.ps1 -uninstallWindowsLogging $true -kubeconfigFile .\conf -namespace logging -fluent_bit_docker_image_name sachinnagar/fluent-windows:1.4.2 -fluent_bit_docker_image_pull_secret regcred
   ```
+  
+# Detailed steps to setup logging:
+
+* Detailed steps to configure elasticsearch cluster and kibana can be found here https://www.elastic.co/blog/introducing-elastic-cloud-on-kubernetes-the-elasticsearch-operator-and-beyond
+* Detailed steps to configure fluent-bit https://github.com/fluent/helm-charts/tree/master/charts/fluent-bit
+
