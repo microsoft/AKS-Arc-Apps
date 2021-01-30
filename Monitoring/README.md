@@ -92,6 +92,15 @@ kubectl.exe --kubeconfig=<target cluster kubeconfig> apply -f windows-rules-dash
 
 ***Note: Windows Monitoring steps above assume that you have installed the prometheus in monitoring namespace. If this is not the case then please update the correct namespace in windows-rules-dashboards.yaml and windows-exporter-daemonset.yaml before applying them..***
 
+### Certs and Keys Monitoring
+
+For clusters with etcd secret encryption enabled, follow the below steps to configure monitoring.
+* Download the necessary [values.yaml](certs-and-keys/values.yaml), and update the prometheus helm release
+```
+helm --kubeconfig <target cluster kubeconfig> upgrade --reuse-values -f .\values.yaml prometheus prometheus-community/kube-prometheus-stack -n=<prometheus namespace>
+```
+* Import [certs-and-keys-dashboard.json](certs-and-keys/certs-and-keys-dashboard.json) into Grafana  
+  * Instructions on importing dashboards can be found in [Grafana documentation](https://grafana.com/docs/grafana/latest/dashboards/export-import/)
 
 # Detailed steps to setup monitoring to use ingress controller to access Grafana:
 ## Certificate Manager
