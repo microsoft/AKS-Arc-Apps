@@ -101,6 +101,17 @@ helm --kubeconfig <target cluster kubeconfig> upgrade --reuse-values -f .\values
 ```
 * Import [certs-and-keys-dashboard.json](certs-and-keys/certs-and-keys-dashboard.json) into Grafana  
   * Instructions on importing dashboards can be found in [Grafana documentation](https://grafana.com/docs/grafana/latest/dashboards/export-import/)
+* The dashboard displays metrics about the success of the MOC KMS plugin in encrypting and decrypting data encryption keys for the Kubernetes API server. See more about the KMS usage in Kubernetes  [here](https://kubernetes.io/docs/tasks/administer-cluster/kms-provider/).
+
+![certs-and-keys-01](images/certs-and-keys-1.jpg)
+
+Below is a list of all metrics captured as part of the certs-and-keys job:  
+Metric | Description
+-|-
+kmsPlugin_decrypt_total | The total number of decrypt requests sent to the MOC KMS plugin  
+kmsPlugin_decrypt_fail | The total number of decrypt requests sent to theMOC KMS plugin that ended in failure  
+kmsPlugin_encrypt_total | The total number of encrypt requests sent to the MOC KMS plugin  
+kmsPlugin_encrypt_fail | The total number of encrypt requests sent to the MOC KMS plugin that ended in failure
 
 # Detailed steps to setup monitoring to use ingress controller to access Grafana:
 ## Certificate Manager
