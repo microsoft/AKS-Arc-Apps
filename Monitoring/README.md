@@ -92,6 +92,26 @@ kubectl.exe --kubeconfig=<target cluster kubeconfig> apply -f windows-rules-dash
 
 ***Note: Windows Monitoring steps above assume that you have installed the prometheus in monitoring namespace. If this is not the case then please update the correct namespace in windows-rules-dashboards.yaml and windows-exporter-daemonset.yaml before applying them..***
 
+### Certs and Keys Monitoring
+
+For clusters with etcd secret encryption enabled, follow the below steps to configure monitoring.
+* Download the necessary [values.yaml](certs-and-keys/values.yaml), and update the prometheus helm release
+```
+helm --kubeconfig <target cluster kubeconfig> upgrade --reuse-values -f .\values.yaml prometheus prometheus-community/kube-prometheus-stack -n=<prometheus namespace>
+```
+* Import [certs-and-keys-dashboard.json](certs-and-keys/certs-and-keys-dashboard.json) into Grafana  
+  * Instructions on importing dashboards can be found in [Grafana documentation](https://grafana.com/docs/grafana/latest/dashboards/export-import/)
+* The dashboard displays metrics about the success of the MOC KMS plugin in encrypting and decrypting data encryption keys for the Kubernetes API server. See more about the KMS usage in Kubernetes  [here](https://kubernetes.io/docs/tasks/administer-cluster/kms-provider/).
+
+![certs-and-keys-01](images/certs-and-keys-1.jpg)
+
+Below is a list of all metrics captured as part of the certs-and-keys job:  
+Metric | Description
+-|-
+kmsPlugin_decrypt_total | The total number of decrypt requests sent to the MOC KMS plugin  
+kmsPlugin_decrypt_fail | The total number of decrypt requests sent to theMOC KMS plugin that ended in failure  
+kmsPlugin_encrypt_total | The total number of encrypt requests sent to the MOC KMS plugin  
+kmsPlugin_encrypt_fail | The total number of encrypt requests sent to the MOC KMS plugin that ended in failure
 
 # Detailed steps to setup monitoring to use ingress controller to access Grafana:
 ## Certificate Manager

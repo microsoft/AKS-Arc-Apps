@@ -1,0 +1,17 @@
+prometheus:
+  prometheusSpec:
+    additionalScrapeConfigs:
+      - job_name: certs-and-keys
+        kubernetes_sd_configs:
+        - role: node
+        scheme: http
+
+        relabel_configs:
+        - action: labelmap
+          regex: __meta_kubernetes_node_label_(.+)
+        - source_labels: [__address__]
+          regex: '(.*):10250'
+          replacement: '${1}:2112'
+          target_label: __address__
+        - source_labels: [__meta_kubernetes_node_labelpresent_node_role_kubernetes_io_master]
+          action: keep
