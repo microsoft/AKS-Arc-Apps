@@ -40,11 +40,7 @@ param (
 
     [Parameter()]
     [ValidateRange(0, 65535)]
-    [Int]$forwardingLocalPort = 3000,
-
-    [Parameter()]
-    [ValidateRange(0, 65535)]
-    [Int]$forwardingRemotePort = 80
+    [Int]$LoadBalancerPort = 3000
 )
 
 function Install-Monitoring {
@@ -80,11 +76,7 @@ function Install-Monitoring {
 
         [Parameter()]
         [ValidateRange(0, 65535)]
-        [Int]$forwardingLocalPort,
-
-        [Parameter()]
-        [ValidateRange(0, 65535)]
-        [Int]$forwardingRemotePort
+        [Int]$LoadBalancerPort
     )
 
     Write-Host "Installing Monitoring"
@@ -240,7 +232,7 @@ kubeEtcd:
     helm.exe --kubeconfig $kubeConfigFile repo update 
    
     Write-Host "Installing monitoring charts"
-    helm.exe --kubeconfig $kubeconfigFile install $global:monitoringRelName prometheus-community/kube-prometheus-stack --namespace $namespace -f $customyaml
+    helm.exe --kubeconfig $kubeconfigFile install $global:monitoringRelName prometheus-community/kube-prometheus-stack --namespace $namespace -f $customyaml --set grafana.service.type=LoadBalancer --set grafana.service.port=$LoadBalancerPort
     
     rm $customyaml
 
@@ -257,9 +249,9 @@ kubeEtcd:
     }
     Write-Host "Pod 'Grafana' is ready."
 
-    Write-Host "Starting port forwarder for Grafana"
-    & start-process -FilePath "kubectl.exe" -ArgumentList $("--kubeconfig=$kubeconfigFile port-forward svc/prometheus-grafana "+$forwardingLocalPort+":"+$forwardingRemotePort+" -n=$namespace")
-    Write-Host "Grafana is available at: http://localhost:$forwardingLocalPort/" -ForegroundColor Green
+    Write-Host "Getting LB IP"
+    $out=kubectl.exe --kubeconfig=$kubeConfigFile get svc  prometheus-grafana -n $namespace -o=json | Out-String | ConvertFrom-Json
+    Write-Host "Grafana is available at: http://$($out.status.loadBalancer.ingress.ip):$LoadBalancerPort/" -ForegroundColor Green
 }
 
 function Execute-KubeCtl
@@ -389,7 +381,7 @@ try {
             Write-Error "Please pass Grafana admin password"
             exit
         }
-        Install-Monitoring -kubeconfigFile $kubeconfigFile -grafanaAdminPasswd $grafanaAdminPasswd -namespace $namespace -forwardingLocalPort $forwardingLocalPort -forwardingRemotePort $forwardingRemotePort
+        Install-Monitoring -kubeconfigFile $kubeconfigFile -grafanaAdminPasswd $grafanaAdminPasswd -namespace $namespace -LoadBalancerPort $LoadBalancerPort
     }
     elseif ($uninstallMonitoring -eq $true) {
         Uninstall-Monitoring -kubeConfigFile $kubeconfigFile -namespace $namespace
