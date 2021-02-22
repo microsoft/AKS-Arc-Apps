@@ -15,7 +15,7 @@ Before performing the procedure in this topic, you must have installed and confi
 * Install kubectl.exe and add it to system PATH.
   
 
-# Easy steps to setup monitoring to use local port-forward to access Grafana:
+# Easy steps to setup monitoring to use LB VIP to access Grafana:
 ***Note: Below script configure 100Gi storage for prometheus instance and 20Gi for grafana.***
 * Download [Setup-Monitoring.ps1](Setup-Monitoring.ps1) script and save it to local machine.
 * Open a new powershell Admin Windows and run below command
@@ -23,7 +23,7 @@ Before performing the procedure in this topic, you must have installed and confi
   .\Setup-Monitoring.ps1 -installMonitoring $true -kubeconfigFile <target cluster kubeconfig file path> -namespace <namespace where monitoring-stack will be installed> -grafanaAdminPasswd <admin password to access Grafana> -forwardingLocalPort <localhost port to access Grafana>
 
   e.g. 
-  .\Setup-Monitoring.ps1 -installMonitoring $true -kubeconfigFile C:\wssd\mycluster-kubeconfig -namespace monitoring -grafanaAdminPasswd AKS -forwardingLocalPort 3000
+  .\Setup-Monitoring.ps1 -installMonitoring $true -kubeconfigFile C:\wssd\mycluster-kubeconfig -namespace monitoring -grafanaAdminPasswd AKS -LoadBalancerPort 3000
   ```
 
 Enter the Grafana dashboard with Username/Password: admin/AKS
@@ -36,13 +36,6 @@ View the list of available dashboards.
 Click on a dashboard to see the Grafana view with statistics being collected by Prometheus.
 ![grafana-05](images/grafana-05.jpg)
 
-***Note: Please run below powershell command to restart Grafana port-forward If it is terminated for any reason.***
-
-```
-start-process -FilePath "kubectl.exe" -ArgumentList "--kubeconfig=<target cluster kubeconfig file path> port-forward svc/prometheus-grafana <forwardingLocalPort>:80 -n=<namespace>"
-e.g.
-start-process -FilePath "kubectl.exe" -ArgumentList "--kubeconfig=C:\wssd\mycluster-kubeconfig port-forward svc/prometheus-grafana 3000:80 -n=monitoring"
-```
 ## Steps to uninstall monitoring:
 
 * Run below command to uninstall monitoring stack.
