@@ -40,7 +40,7 @@ param (
 
     [Parameter()]
     [ValidateRange(0, 65535)]
-    [Int]$LoadBalancerPort = 3000
+    [Int]$forwardingLocalPort = 3000
 )
 
 function Install-Monitoring {
@@ -76,7 +76,7 @@ function Install-Monitoring {
 
         [Parameter()]
         [ValidateRange(0, 65535)]
-        [Int]$LoadBalancerPort
+        [Int]$forwardingLocalPort
     )
 
     Write-Host "Installing Monitoring"
@@ -251,7 +251,7 @@ kubeEtcd:
 
     Write-Host "Getting LB IP"
     $out=kubectl.exe --kubeconfig=$kubeConfigFile get svc  prometheus-grafana -n $namespace -o=json | Out-String | ConvertFrom-Json
-    Write-Host "Grafana is available at: http://$($out.status.loadBalancer.ingress.ip):$LoadBalancerPort/" -ForegroundColor Green
+    Write-Host "Grafana is available at: http://$($out.status.loadBalancer.ingress.ip):$forwardingLocalPort/" -ForegroundColor Green
 }
 
 function Execute-KubeCtl
@@ -381,7 +381,7 @@ try {
             Write-Error "Please pass Grafana admin password"
             exit
         }
-        Install-Monitoring -kubeconfigFile $kubeconfigFile -grafanaAdminPasswd $grafanaAdminPasswd -namespace $namespace -LoadBalancerPort $LoadBalancerPort
+        Install-Monitoring -kubeconfigFile $kubeconfigFile -grafanaAdminPasswd $grafanaAdminPasswd -namespace $namespace -forwardingLocalPort $forwardingLocalPort
     }
     elseif ($uninstallMonitoring -eq $true) {
         Uninstall-Monitoring -kubeConfigFile $kubeconfigFile -namespace $namespace
