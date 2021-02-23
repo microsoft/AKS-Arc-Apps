@@ -315,11 +315,16 @@ tolerations:
     Start-Sleep -Seconds 15
   }
  
-  Write-Host "filebeat pod is ready." -ForegroundColor Green
+  Write-Host "fluent-bit pod is ready." -ForegroundColor Green
  
-  Write-Host "Starting port forwarder for Kibana"
-  & start-process -FilePath "kubectl.exe" -ArgumentList $("--kubeconfig=$kubeconfigFile port-forward svc/kibana-kb-http "+$forwardingLocalPort+":"+$forwardingRemotePort+" -n=$namespace")
-  Write-Host "Kibana is available at: https://localhost:$forwardingLocalPort/" -ForegroundColor Green
+  Write-Host "Patching Kibana svc to use Load balancer"
+  
+  kubectl.exe --kubeconfig=$kubeConfigFile patch svc kibana-kb-http -p '{\"spec\": {\"type\": \"LoadBalancer\"}}' -n $namespace
+
+  Start-Sleep -Seconds 60
+  Write-Host "Getting LB IP"
+  $svcOut=kubectl.exe --kubeconfig=$kubeConfigFile get svc kibana-kb-http -n $namespace -o=json | Out-String | ConvertFrom-Json
+  Write-Host "Kibana is available at: https://$($svcOut.status.loadBalancer.ingress.ip):$forwardingLocalPort/" -ForegroundColor Green
 
   Write-Host "Retrieving Kibana dashboard login Password"
   Write-Host $PASSWORD -ForegroundColor Yellow
