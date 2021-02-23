@@ -232,7 +232,7 @@ kubeEtcd:
     helm.exe --kubeconfig $kubeConfigFile repo update 
    
     Write-Host "Installing monitoring charts"
-    helm.exe --kubeconfig $kubeconfigFile install $global:monitoringRelName prometheus-community/kube-prometheus-stack --namespace $namespace -f $customyaml --set grafana.service.type=LoadBalancer --set grafana.service.port=$LoadBalancerPort
+    helm.exe --kubeconfig $kubeconfigFile install $global:monitoringRelName prometheus-community/kube-prometheus-stack --namespace $namespace -f $customyaml --set grafana.service.type=LoadBalancer --set grafana.service.port=$forwardingLocalPort
     
     rm $customyaml
 
