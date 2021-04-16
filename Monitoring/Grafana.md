@@ -4,26 +4,27 @@
 ## Grafana dashboards available in AKS-HCI
 Following Grafana dashboards are supported in AKS-HCI.
 
-•	API server
-•	Networking / Cluster
-•	Compute Resources / Cluster
-•	Compute Resources / Namespace (Pods)
-•	Compute Resources / Node (Pods)
-•	Compute Resources / Pod
-•	Compute Resources / Workload
-•	Compute Resources / Namespace (Workloads)
-•	Kubelet
-•	Networking / Namespace (Pods)
-•	Networking / Namespace (Workload)
-•	Persistent Volumes
-•	Networking / Pod
-•	StatefulSets
-•	Networking / Workload
-•	Compute Resources / Cluster (Windows)
-•	Compute Resources / Namespace (Windows Pods)
-•	Compute Resources / Pod (Windows)
-•	USE Method / Cluster (Windows)
-•	USE Method / Node (Windows)
+- API server
+- Networking / Cluster
+- Compute Resources / Cluster
+- Compute Resources / Namespace (Pods)
+- Compute Resources / Node (Pods)
+- Compute Resources / Pod
+- Compute Resources / Workload
+- Compute Resources / Namespace (Workloads)
+- Kubelet
+- Networking / Namespace (Pods)
+- Networking / Namespace (Workload)
+- Persistent Volumes
+- Networking / Pod
+- StatefulSets
+- Networking / Workload
+- Compute Resources / Cluster (Windows)
+- Compute Resources / Namespace (Windows Pods)
+- Compute Resources / Pod (Windows)
+- USE Method / Cluster (Windows)
+- USE Method / Node (Windows)
+
 
 ## Deploy Grafana
 There are two approaches for deploying Granafa for AKS-HCI.
