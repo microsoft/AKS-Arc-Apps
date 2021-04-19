@@ -12,7 +12,7 @@ data:
     datasources:
     - name: Prometheus
       type: prometheus
-      url: http://akshci-monitoring-cluster2-prometheus.monitoring:9090
+      url: http://akshci-monitoring-prometheus-svc.monitoring:9090
       access: proxy
       isDefault: true
       jsonData:
