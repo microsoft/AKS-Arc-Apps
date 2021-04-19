@@ -30,7 +30,10 @@ Following Grafana dashboards are supported in AKS-HCI.
 There are two approaches for deploying Granafa for AKS-HCI.
 
 ### Deploy Grafana in AKS-HCI cluster
-
+Grafana can be installed using helm chart
+helm repo add grafana https://grafana.github.io/helm-charts
+helm repo update
+helm install grafana grafana/grafana --set nodeSelector."kubernetes\.io/os"=linux --set sidecar.dashboards.enabled=true --set sidecar.datasources.enabled=true -n monitoring
 
 ### Deploy Grafana outside AKS-HCI cluster
 
