@@ -124,12 +124,42 @@ data:
     kubectl.exe --kubeconfig=$kubeConfigFile create -f $etcdcertyaml
     rm $etcdcertyaml
 
+  ## create new storage claas monitoring-sc
+  $sc=kubectl.exe --kubeconfig=$kubeConfigFile get sc default -o json | ConvertFrom-Json
+  $monitoringsc = @"
+allowVolumeExpansion: $($sc.allowVolumeExpansion)
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  annotations:
+    storageclass.kubernetes.io/is-default-class: "false"
+  name: monitoring-sc
+parameters:
+  blocksize: "$($sc.parameters.blocksize)"
+  container: $($sc.parameters.container)
+  dynamic: "$($sc.parameters.dynamic)"
+  group: $($sc.parameters.group)
+  hostname: $($sc.parameters.hostname)
+  logicalsectorsize: "$($sc.parameters.logicalsectorsize)"
+  physicalsectorsize: "$($sc.parameters.physicalsectorsize)"
+  port: "$($sc.parameters.port)"
+  fsType: "ext4"
+provisioner: $($sc.provisioner)
+reclaimPolicy: $($sc.reclaimPolicy)
+volumeBindingMode: $($sc.volumeBindingMode)
+"@
+$monitoringscyaml = [IO.Path]::GetTempFileName() | Rename-Item -NewName { $_ -replace 'tmp$', 'yaml' } -PassThru
+Set-Content -Path $monitoringscyaml -Value $monitoringsc
+kubectl.exe --kubeconfig=$kubeConfigFile create -f $monitoringscyaml
+rm $monitoringscyaml
+
     $custom = @"
 alertmanager:
   alertmanagerSpec:
     storage:
       volumeClaimTemplate:
         spec:
+          storageClassName: monitoring-sc
           accessModes: ["ReadWriteOnce"]
           resources:
             requests:
@@ -144,6 +174,7 @@ prometheus:
     storageSpec:
       volumeClaimTemplate:
         spec:
+          storageClassName: monitoring-sc
           accessModes: ["ReadWriteOnce"]
           resources:
             requests:
