@@ -2,6 +2,8 @@
 This topic describes how to install [Prometheus](https://prometheus.io/) in a Kubernetes cluster created by AKS-HCI using Helm. Prometheus is
 an open-source monitoring system with a dimensional data model, flexible query language, efficient time series database and modern alerting approach. See https://prometheus.io/ for reference.
 
+[Grafana](https://github.com/grafana/grafana) is a tool used to view, query, and visualize metrics on the Grafana dashboards. It can be configured to use Prometheus as the data source. The deployment guidance below requires that you license your own copy of Grafana.
+
 There are multiple installation techniques for various scenarios. The goal of this guide is to focus on monitoring a single Kubernetes cluster. The optimal approach is using the Helm package manager to deploy Prometheus utilizing the Operator Framework. Reference: https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-prometheus-stack
 
 ## Prerequisites:
