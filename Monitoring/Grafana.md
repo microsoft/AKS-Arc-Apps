@@ -1,7 +1,6 @@
 **Use Grafana with AKS-HCI**
 
-Grafana is a tool used to view, query, and visualize metrics on the Grafana dashboards. It is configured to use Prometheus as the data source.
-
+[Grafana](https://github.com/grafana/grafana) is a tool used to view, query, and visualize metrics on the Grafana dashboards. It can be configured to use Prometheus as the data source. The deployment guidance below requires that you license your own copy of Grafana.
  
 
 **Grafana dashboards available in AKS-HCI**
