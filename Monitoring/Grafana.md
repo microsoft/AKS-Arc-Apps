@@ -50,7 +50,7 @@ helm repo add grafana https://grafana.github.io/helm-charts
 
 helm repo update
 
-helm install grafana grafana/grafana --set nodeSelector."kubernetes\.io/os"=linux --set sidecar.dashboards.enabled=true --set sidecar.datasources.enabled=true -n monitoring
+helm install grafana grafana/grafana --version 6.11.0 --set nodeSelector."kubernetes\.io/os"=linux --set sidecar.dashboards.enabled=true --set sidecar.datasources.enabled=true -n monitoring
 ```
 Wait until Grafana pod is up and running and get the Grafana login password.
 ```
