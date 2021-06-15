@@ -5,7 +5,7 @@
 
 **Grafana dashboards available in AKS-HCI**
 
-Following Grafana dashboards are supported in AKS-HCI.
+Following AKS-HCI dashboards have been validated to work with Grafana 6.11.0:
 
 - API server
 - Networking / Cluster
