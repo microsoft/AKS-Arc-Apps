@@ -43,6 +43,11 @@ Configure Dashboards and data source
 kubectl apply -f https://raw.githubusercontent.com/microsoft/AKS-HCI-Apps/main/Monitoring/data-source.yaml
 kubectl apply -f https://raw.githubusercontent.com/microsoft/AKS-HCI-Apps/main/Monitoring/dashboards.yaml
 ```
+*For August Release or Later*
+```
+kubectl apply -f https://raw.githubusercontent.com/microsoft/AKS-HCI-Apps/main/Monitoring/dashboards-new.yaml
+```
+
 Grafana can be installed using helm chart
 
 ```
