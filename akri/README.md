@@ -1,4 +1,4 @@
-We recommend Akri to enable leaf device access on the cluster.
+We recommend [Akri](https://docs.akri.sh/) to enable leaf device access on the cluster.
 
 ## Prerequisites:
 Before performing the procedure in this topic, you must have installed and configured the following:
@@ -23,21 +23,22 @@ This will start Akri in your cluster.  To configure Akri, you can create and app
 You can use helm to create Configuration yaml files (for example, an ONVIF Configuration):
 
 ```
-helm repo add akri-helm-charts https://deislabs.github.io/akri/
+helm repo add akri-helm-charts https://project-akri.github.io/akri/
 helm template akri akri-helm-charts/akri \
-    --set useLatestContainers=true \
-    --set onvifVideo.enabled=true \
     --set controller.enabled=false \
-    --set agent.enabled=false > onvif-camera.yaml
+    --set agent.enabled=false \
+    --set rbac.enabled=false \
+    --set onvif.configuration.enabled=true \
+    --set onvif.configuration.brokerPod.image.repository="ghcr.io/project-akri/akri/onvif-video-broker" > onvif-configuration.yaml
 ```
 
 And you can use kubectl to apply these Configuration yaml files:
 
 ```
-kubectl --kubeconfig <target cluster kubeconfig file path> apply -f onvif-camera.yaml
+kubectl --kubeconfig <target cluster kubeconfig file path> apply -f onvif-configuration.yaml
 ```
 
-See the [Akri documentation](https://github.com/deislabs/akri/blob/main/docs/modifying-akri-installation.md#generating-modifying-and-applying-a-configuration-yaml) for more details.
+See the [Akri documentation](https://docs.akri.sh/) for more details.
 
 ## Steps to uninstall Akri:
 

@@ -55,11 +55,11 @@ function Install-Akri {
         kubectl.exe --kubeconfig=$kubeConfigFile create namespace $namespace
     }
     
-    helm.exe --kubeconfig $kubeConfigFile repo add akri-helm-charts https://deislabs.github.io/akri/
+    helm.exe --kubeconfig $kubeConfigFile repo add akri-helm-charts https://project-akri.github.io/akri/
     helm.exe --kubeconfig $kubeConfigFile repo update 
    
     Write-Host "Installing Akri charts"
-    helm.exe --kubeconfig $kubeconfigFile install $global:akriRelName akri-helm-charts/akri --namespace $namespace --debug
+    helm.exe --kubeconfig $kubeconfigFile install $global:akriRelName akri-helm-charts/akri --set agent.full=true --namespace $namespace --debug
     
     ## Wait for akri-controller pod to be ready
     Write-Host "Waiting for Pod 'akri-controller' to be ready."
