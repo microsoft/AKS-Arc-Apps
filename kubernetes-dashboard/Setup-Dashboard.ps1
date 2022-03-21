@@ -276,7 +276,7 @@ function Execute-Command
 
 
 $global:dashboardSecret      = "cluster-admin-dashboard"
-$global:dashboardYaml        = "https://raw.githubusercontent.com/kubernetes/dashboard/v2.0.0-beta8/aio/deploy/recommended.yaml"
+$global:dashboardYaml        = "https://raw.githubusercontent.com/kubernetes/dashboard/master/aio/deploy/recommended.yaml"
 
 $global:dashboardPods =
 @(
