@@ -102,7 +102,11 @@ function Get-DashboardSecret
         [String] $kubeconfig
     )
 
-    $secret = (Execute-KubeCtl -kubeconfig $kubeconfig -arguments "get secret") | findstr $global:dashboardSecret
+    try {
+        $secret = (Execute-KubeCtl -kubeconfig $kubeconfig -arguments "get secret") | findstr $global:dashboardSecret
+    } catch {
+        Write-Host $_
+    }
     if ($secret -eq $null)
     {
         return $null
@@ -134,7 +138,11 @@ function Uninstall-Dashboard
 
     Execute-KubeCtl -kubeconfig $kubeConfigFile -arguments $("delete -f " + $global:dashboardYaml) -ignoreError
 
-    $secret = (Execute-KubeCtl -kubeconfig $kubeConfigFile -arguments "get secret") | findstr $global:dashboardSecret
+    try{
+        $secret = (Execute-KubeCtl -kubeconfig $kubeConfigFile -arguments "get secret") | findstr $global:dashboardSecret
+    } catch {
+        Write-Host $_
+    }
     if ($secret)
     {
         Write-Host "Removing dashboard secret"
