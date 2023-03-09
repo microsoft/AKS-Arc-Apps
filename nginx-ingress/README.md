@@ -102,7 +102,7 @@ The following commands will test the connectivity externally to verify that our 
 
 2. Test the coffe PODs
 
-    Issue the command below to curl your PODs. Note that there is coffee in the url which nginx controller is using to direct traffic to the coffee backend PODs. Issuing the command multiple time round robins the request to the 2 coffee backend PODs as defined in cafe.yaml. The "Server address" field in the curl output identifies the backend POD fullfilling the request
+    Issue the command below to curl your PODs. Note that there is coffee in the url which nginx controller is using to direct traffic to the coffee backend PODs. Issuing the command multiple time round robins the request to the 2 coffee backend PODs as defined in cafe.yaml. The "Server address" field in the curl output identifies the backend POD fulfilling the request
 
     ```
     $ curl.exe --resolve cafe.lab.local:$($IC_HTTPS_PORT):$($IC_IP) "https://cafe.lab.local:$($IC_HTTPS_PORT)/coffee" --insecure
