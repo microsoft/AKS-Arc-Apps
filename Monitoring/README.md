@@ -10,6 +10,9 @@ There are multiple installation techniques for various scenarios. The goal of th
 Before performing the procedure in this topic, you must have installed and configured the following:
 
 * A Kubernetes cluster created with AKS-HCI with at least 1 master and 1 Linux worker nodes.
+
+* Credentials for SSH to the control plane node of the Kubernetes cluster.
+
 * Install Helm V3 and add it to system PATH. 
   Helm is the package manager for Kubernetes that runs on a local machine with `kubectl` access to the Kubernetes cluster. The installation process for Prometheus and the Certificate Manager leverage Helm charts available on the public Helm repo. Please review the steps on your own recommended way of [Installing Helm](https://helm.sh/docs/using_helm/#installing-helm).
   Download and install the [Helm CLI](https://github.com/helm/helm/releases/tag/v3.3.0) on the local machine that will be interfacing with the Kubernetes cluster. 
@@ -22,10 +25,10 @@ Before performing the procedure in this topic, you must have installed and confi
 * Download [Setup-Monitoring.ps1](Setup-Monitoring.ps1) script and save it to local machine.
 * Open a new powershell Admin Windows and run below command
   ```
-  .\Setup-Monitoring.ps1 -installMonitoring $true -kubeconfigFile <target cluster kubeconfig file path> -namespace <namespace where monitoring-stack will be installed> -grafanaAdminPasswd <admin password to access Grafana> -forwardingLocalPort <localhost port to access Grafana>
+  .\Setup-Monitoring.ps1 -installMonitoring $true -kubeconfigFile <target cluster kubeconfig file path> -namespace <namespace where monitoring-stack will be installed> -grafanaAdminPasswd <admin password to access Grafana> -forwardingLocalPort <localhost port to access Grafana> -vmIP <IP address of control plane node> -sshUser <login name for ssh to control plane node> -sshKey <path to the identity file for ssh>
 
   e.g. 
-  .\Setup-Monitoring.ps1 -installMonitoring $true -kubeconfigFile C:\wssd\mycluster-kubeconfig -namespace monitoring -grafanaAdminPasswd AKS -LoadBalancerPort 3000
+  .\Setup-Monitoring.ps1 -installMonitoring $true -kubeconfigFile C:\wssd\mycluster-kubeconfig -namespace monitoring -grafanaAdminPasswd AKS -LoadBalancerPort 3000 -vmIP 10.100.200.200 -sshUser clouduser -sshKey C:\wssd\id_rsa
   ```
 
 Enter the Grafana dashboard with Username/Password: admin/AKS
@@ -246,17 +249,14 @@ kubectl get secret example-com-tls -n monitoring -o yaml
 By default Prometheus does not scrap the etcd metrics because etcd metrics are exposed on the secure endpoint and Prometheus is not configured with etcd client certificate to access the etcd secure endpoint.
 Etcd client certificate and etcd CA can be retrived from the api-server pod. Please use below steps to create the kubernetes secret that contains the etcd CA/cert/key to scrap the etcd endpoint.
 
-a) Get the Api-server pod name.
-
+a) Get the ETCD CA/client cert/client key
 ```
-  $podname=$(kubectl get pods -o=jsonpath='{.items[0].metadata.name}' -l component=kube-apiserver -n kube-system)
+ssh.exe $sshUser@$vmIP -i $sshKey "sudo cp /etc/kubernetes/pki/etcd/ca.crt /etc/kubernetes/pki/apiserver-etcd-client.crt /etc/kubernetes/pki/apiserver-etcd-client.key ~"
+ssh.exe $sshUser@$vmIP -i $sshKey "sudo chmod 666 ~/ca.crt ~/apiserver-etcd-client.crt ~/apiserver-etcd-client.key"
+scp.exe -i $sshKey "${sshUser}@${vmIP}:~/ca.crt" "${sshUser}@${vmIP}:~/apiserver-etcd-client.crt" "${sshUser}@${vmIP}:~/apiserver-etcd-client.key" .
 ```
-b) Below steps will get the ETCD CA/client cert/client key and will generate the base64 encoding to store in secret.
+b) Below steps will generate the base64 encoding to store in secret.
 ```
-kubectl exec $podname -n=kube-system -- cat /etc/kubernetes/pki/etcd/ca.crt > ca.crt
-kubectl exec $podname -nkube-system -- cat /etc/kubernetes/pki/apiserver-etcd-client.crt > client.crt
-kubectl exec $podname -nkube-system -- cat /etc/kubernetes/pki/apiserver-etcd-client.key > client.key
-
 $caContent = get-content .\ca.crt -Encoding UTF8 -Raw
 $caContentBytes = [System.Text.Encoding]::UTF8.GetBytes($caContent)
 $caContentEncoded = [System.Convert]::ToBase64String($caContentBytes)
@@ -269,7 +269,7 @@ $clientKeyContent = get-content .\client.key -Encoding UTF8 -Raw
 $clientKeyContentBytes = [System.Text.Encoding]::UTF8.GetBytes($clientKeyContent)
 $clientKeyContentEncoded = [System.Convert]::ToBase64String($clientKeyContentBytes)
 
-rm .\ca.crt, .\client.crt, .\client.key
+rm .\ca.crt, .\apiserver-etcd-client.crt, .\apiserver-etcd-client.key
 ```
 c) Copy the following into a file and named `etcd-cert.yaml` and update the ca.crt, client.crt and client.key as directed.
 ```yaml
@@ -422,7 +422,7 @@ Deploy Promethus components in the monitoring namespace.
 
 ```
 helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
-helm repo add stable https://kubernetes-charts.storage.googleapis.com/
+helm repo add stable https://charts.helm.sh/stable
 helm repo update
 helm install prometheus prometheus-community/kube-prometheus-stack --namespace monitoring -f custom.yaml
 ```
