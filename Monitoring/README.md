@@ -28,7 +28,7 @@ Before performing the procedure in this topic, you must have installed and confi
   .\Setup-Monitoring.ps1 -installMonitoring $true -kubeconfigFile <target cluster kubeconfig file path> -namespace <namespace where monitoring-stack will be installed> -grafanaAdminPasswd <admin password to access Grafana> -forwardingLocalPort <localhost port to access Grafana> -vmIP <IP address of control plane node> -sshUser <login name for ssh to control plane node> -sshKey <path to the identity file for ssh>
 
   e.g. 
-  .\Setup-Monitoring.ps1 -installMonitoring $true -kubeconfigFile C:\wssd\mycluster-kubeconfig -namespace monitoring -grafanaAdminPasswd AKS -LoadBalancerPort 3000 -vmIP 10.100.200.200 -sshUser clouduser -sshKey C:\wssd\id_rsa
+  .\Setup-Monitoring.ps1 -installMonitoring $true -kubeconfigFile C:\wssd\mycluster-kubeconfig -namespace monitoring -grafanaAdminPasswd AKS -forwardingLocalPort 3000 -vmIP 10.100.200.200 -sshUser clouduser -sshKey C:\wssd\id_rsa
   ```
 
 Enter the Grafana dashboard with Username/Password: admin/AKS

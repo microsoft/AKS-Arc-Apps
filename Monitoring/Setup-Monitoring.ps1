@@ -51,13 +51,13 @@ param (
     [ValidateRange(0, 65535)]
     [Int]$forwardingLocalPort = 3000,
 
-    [Parameter(Mandatory = $true)]
+    [Parameter()]
     [string] $vmIP,
 
-    [Parameter(Mandatory = $true)]
+    [Parameter()]
     [string] $sshUser,
 
-    [Parameter(Mandatory = $true)]
+    [Parameter()]
     [string] $sshKey
 )
 
@@ -458,6 +458,9 @@ function Uninstall-Monitoring {
     start-process -FilePath "kubectl.exe" -ArgumentList $("--kubeconfig=$kubeConfigFile delete secret etcd-certs -n=$namespace") -Wait
     #& kubectl.exe --kubeconfig=$kubeConfigFile delete secret etcd-certs -n=$namespace
 
+    Write-Host "Deleting storage class"
+    start-process -FilePath "kubectl.exe" -ArgumentList $("--kubeconfig=$kubeConfigFile delete sc monitoring-sc") -Wait
+
     Write-Host "Uninstalling monitoring CRDS"
     & kubectl.exe --kubeconfig=$kubeConfigFile delete crds alertmanagers.monitoring.coreos.com podmonitors.monitoring.coreos.com prometheuses.monitoring.coreos.com prometheusrules.monitoring.coreos.com servicemonitors.monitoring.coreos.com thanosrulers.monitoring.coreos.com
 }
@@ -475,7 +478,7 @@ try {
             Write-Error "Please pass Grafana admin password"
             exit
         }
-        Install-Monitoring -kubeconfigFile $kubeconfigFile -grafanaAdminPasswd $grafanaAdminPasswd -namespace $namespace -forwardingLocalPort $forwardingLocalPort
+        Install-Monitoring -kubeconfigFile $kubeconfigFile -grafanaAdminPasswd $grafanaAdminPasswd -namespace $namespace -forwardingLocalPort $forwardingLocalPort -vmIP $vmIP -sshUser $sshUser -sshKey $sshKey
     }
     elseif ($uninstallMonitoring -eq $true) {
         Uninstall-Monitoring -kubeConfigFile $kubeconfigFile -namespace $namespace
