@@ -13,7 +13,7 @@ Before performing the procedure in this topic, you must have installed and confi
 
 * Credentials for SSH to the control plane node of the Kubernetes cluster.
 
-* Install Helm V3 and add it to system PATH. 
+* Install Helm V3 and add it to system PATH.
   Helm is the package manager for Kubernetes that runs on a local machine with `kubectl` access to the Kubernetes cluster. The installation process for Prometheus and the Certificate Manager leverage Helm charts available on the public Helm repo. Please review the steps on your own recommended way of [Installing Helm](https://helm.sh/docs/using_helm/#installing-helm).
   Download and install the [Helm CLI](https://github.com/helm/helm/releases/tag/v3.3.0) on the local machine that will be interfacing with the Kubernetes cluster. 
 
@@ -430,10 +430,11 @@ helm install prometheus prometheus-community/kube-prometheus-stack --namespace m
   * A successful installation will look like:
 
   ```
-  NAME:   prometheus
-  LAST DEPLOYED: Thu Jul 11 09:49:51 2019
+  NAME: prometheus
+  LAST DEPLOYED: Thu Dec 14 08:03:59 2023
   NAMESPACE: monitoring
-  STATUS: DEPLOYED
+  STATUS: deployed
+  REVISION: 1
 
   RESOURCES:
   ==> v1/Alertmanager
