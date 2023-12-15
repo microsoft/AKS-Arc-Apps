@@ -21,6 +21,15 @@
 
     .PARAMETER forwardingRemotePort
         Remote port to use for kubectl port forwarding
+
+    .PARAMETER vmIP
+        IP address of the controlplane node
+    
+    .PARAMETER sshUser
+        user name for ssh connection to the controlplane node
+
+    .PARAMETER sshKey
+        path to the ssh key to use for ssh connection to the controlplane node
 #>
 param (
     [Parameter()]
@@ -40,7 +49,16 @@ param (
 
     [Parameter()]
     [ValidateRange(0, 65535)]
-    [Int]$forwardingLocalPort = 3000
+    [Int]$forwardingLocalPort = 3000,
+
+    [Parameter()]
+    [string] $vmIP,
+
+    [Parameter()]
+    [string] $sshUser,
+
+    [Parameter()]
+    [string] $sshKey
 )
 
 function Install-Monitoring {
@@ -62,6 +80,15 @@ function Install-Monitoring {
 
     .PARAMETER forwardingRemotePort
         Remote port to use for kubectl port forwarding
+
+    .PARAMETER vmIP
+        IP address of the controlplane node
+    
+    .PARAMETER sshUser
+        user name for ssh connection to the controlplane node
+
+    .PARAMETER sshKey
+        path to the ssh key to use for ssh connection to the controlplane node
     #>
 
     param (
@@ -76,8 +103,21 @@ function Install-Monitoring {
 
         [Parameter()]
         [ValidateRange(0, 65535)]
-        [Int]$forwardingLocalPort
+        [Int]$forwardingLocalPort,
+
+        [Parameter(Mandatory = $true)]
+        [string] $vmIP,
+
+        [Parameter(Mandatory = $true)]
+        [string] $sshUser,
+
+        [Parameter(Mandatory = $true)]
+        [string] $sshKey
     )
+
+    if (-Not $Env:Path.Contains("C:\Program Files (x86)\Microsoft SDKs\Azure\CLI2\wbin")) {
+        $Env:Path = "$Env:Path;C:\Windows\System32\OpenSSH"
+    }
 
     Write-Host "Installing Monitoring"
     Write-Host "Creating namespace $namespace"
@@ -88,25 +128,25 @@ function Install-Monitoring {
     }
     
     Write-Host "Retrieving ETCD credenatils"
-    $podname = $(kubectl.exe --kubeconfig=$kubeConfigFile get pods -o=jsonpath='{.items[0].metadata.name}' -l component=kube-apiserver -n kube-system)
-    kubectl.exe --kubeconfig=$kubeConfigFile exec $podname -n=kube-system -- cat /etc/kubernetes/pki/etcd/ca.crt > ca.crt
-    kubectl.exe --kubeconfig=$kubeConfigFile exec $podname -nkube-system -- cat /etc/kubernetes/pki/apiserver-etcd-client.crt > client.crt
-    kubectl.exe --kubeconfig=$kubeConfigFile exec $podname -nkube-system -- cat /etc/kubernetes/pki/apiserver-etcd-client.key > client.key
+    ssh.exe $sshUser@$vmIP -i $sshKey "sudo cp /etc/kubernetes/pki/etcd/ca.crt /etc/kubernetes/pki/apiserver-etcd-client.crt /etc/kubernetes/pki/apiserver-etcd-client.key ~"
+    ssh.exe $sshUser@$vmIP -i $sshKey "sudo chmod 666 ~/ca.crt ~/apiserver-etcd-client.crt ~/apiserver-etcd-client.key"
+    scp.exe -i $sshKey "${sshUser}@${vmIP}:~/ca.crt" "${sshUser}@${vmIP}:~/apiserver-etcd-client.crt" "${sshUser}@${vmIP}:~/apiserver-etcd-client.key" .
 
     $caContent = get-content .\ca.crt -Encoding UTF8 -Raw
     $caContentBytes = [System.Text.Encoding]::UTF8.GetBytes($caContent)
     $caContentEncoded = [System.Convert]::ToBase64String($caContentBytes)
 
-    $clientCertContent = get-content .\client.crt -Encoding UTF8 -Raw
+    $clientCertContent = get-content .\apiserver-etcd-client.crt -Encoding UTF8 -Raw
     $clientCertContentBytes = [System.Text.Encoding]::UTF8.GetBytes($clientCertContent)
     $clientCertContentEncoded = [System.Convert]::ToBase64String($clientCertContentBytes)
 
-    $clientKeyContent = get-content .\client.key -Encoding UTF8 -Raw
+    $clientKeyContent = get-content .\apiserver-etcd-client.key -Encoding UTF8 -Raw
     $clientKeyContentBytes = [System.Text.Encoding]::UTF8.GetBytes($clientKeyContent)
     $clientKeyContentEncoded = [System.Convert]::ToBase64String($clientKeyContentBytes)
 
-    rm .\ca.crt, .\client.crt, .\client.key
+    rm .\ca.crt, .\apiserver-etcd-client.crt, .\apiserver-etcd-client.key
 
+    Write-Host "Creating etcd secret"
     $etcdcert = @"
 apiVersion: v1
 kind: Secret
@@ -120,13 +160,12 @@ data:
 "@
     $etcdcertyaml = [IO.Path]::GetTempFileName() | Rename-Item -NewName { $_ -replace 'tmp$', 'yaml' } -PassThru
     Set-Content -Path $etcdcertyaml -Value $etcdcert
-    Write-Host "Creating etcd secret"
     kubectl.exe --kubeconfig=$kubeConfigFile create -f $etcdcertyaml
     rm $etcdcertyaml
 
-  ## create new storage claas monitoring-sc
-  $sc=kubectl.exe --kubeconfig=$kubeConfigFile get sc default -o json | ConvertFrom-Json
-  $monitoringsc = @"
+    Write-Host "Creating storage claas"
+    $sc=kubectl.exe --kubeconfig=$kubeConfigFile get sc default -o json | ConvertFrom-Json
+    $monitoringsc = @"
 allowVolumeExpansion: $($sc.allowVolumeExpansion)
 apiVersion: storage.k8s.io/v1
 kind: StorageClass
@@ -136,7 +175,7 @@ metadata:
   name: monitoring-sc
 parameters:
   blocksize: "$($sc.parameters.blocksize)"
-  container: $($sc.parameters.container)
+  container: $(Get-EscapedEmptyString -obj $sc.parameters.container)
   dynamic: "$($sc.parameters.dynamic)"
   group: $($sc.parameters.group)
   hostname: $($sc.parameters.hostname)
@@ -148,11 +187,13 @@ provisioner: $($sc.provisioner)
 reclaimPolicy: $($sc.reclaimPolicy)
 volumeBindingMode: $($sc.volumeBindingMode)
 "@
-$monitoringscyaml = [IO.Path]::GetTempFileName() | Rename-Item -NewName { $_ -replace 'tmp$', 'yaml' } -PassThru
-Set-Content -Path $monitoringscyaml -Value $monitoringsc
-kubectl.exe --kubeconfig=$kubeConfigFile create -f $monitoringscyaml
-rm $monitoringscyaml
+    $monitoringscyaml = [IO.Path]::GetTempFileName() | Rename-Item -NewName { $_ -replace 'tmp$', 'yaml' } -PassThru
+    Set-Content -Path $monitoringscyaml -Value $monitoringsc
+    kubectl.exe --kubeconfig=$kubeConfigFile create -f $monitoringscyaml
+    rm $monitoringscyaml
 
+
+    Write-Host "Customizing kube-prometheus-stack chart"
     $custom = @"
 alertmanager:
   alertmanagerSpec:
@@ -254,12 +295,11 @@ kubeEtcd:
     certFile: /etc/prometheus/secrets/etcd-certs/client.crt
     keyFile: /etc/prometheus/secrets/etcd-certs/client.key
 "@
-    
     $customyaml = [IO.Path]::GetTempFileName() | Rename-Item -NewName { $_ -replace 'tmp$', 'yaml' } -PassThru
     Set-Content -Path $customyaml -Value $custom
    
     helm.exe --kubeconfig $kubeConfigFile repo add prometheus-community https://prometheus-community.github.io/helm-charts
-    helm.exe --kubeconfig $kubeConfigFile repo add stable https://kubernetes-charts.storage.googleapis.com/
+    helm.exe --kubeconfig $kubeConfigFile repo add stable https://charts.helm.sh/stable
     helm.exe --kubeconfig $kubeConfigFile repo update 
    
     Write-Host "Installing monitoring charts"
@@ -283,6 +323,7 @@ kubeEtcd:
     Write-Host "Getting LB IP"
     $out=kubectl.exe --kubeconfig=$kubeConfigFile get svc  prometheus-grafana -n $namespace -o=json | Out-String | ConvertFrom-Json
     Write-Host "Grafana is available at: http://$($out.status.loadBalancer.ingress.ip):$forwardingLocalPort/" -ForegroundColor Green
+
 }
 
 function Execute-KubeCtl
@@ -364,6 +405,29 @@ function Execute-Command
     return $out
 }
 
+function Get-EscapedEmptyString {
+    <#
+    .DESCRIPTION
+        Escape empty string for yaml file.
+
+    .PARAMETER obj
+        Object to escape.
+
+    .OUTPUTS
+        Escaped object.
+    #>
+
+    param (
+        [System.Object]$obj
+    )
+    if ([string]::IsNullOrEmpty($obj)) {
+        return '""'
+    } else {
+        return $obj
+    }
+    
+}
+
 function Uninstall-Monitoring {
     <#
     .DESCRIPTION
@@ -394,10 +458,12 @@ function Uninstall-Monitoring {
     start-process -FilePath "kubectl.exe" -ArgumentList $("--kubeconfig=$kubeConfigFile delete secret etcd-certs -n=$namespace") -Wait
     #& kubectl.exe --kubeconfig=$kubeConfigFile delete secret etcd-certs -n=$namespace
 
+    Write-Host "Deleting storage class"
+    start-process -FilePath "kubectl.exe" -ArgumentList $("--kubeconfig=$kubeConfigFile delete sc monitoring-sc") -Wait
+
     Write-Host "Uninstalling monitoring CRDS"
     & kubectl.exe --kubeconfig=$kubeConfigFile delete crds alertmanagers.monitoring.coreos.com podmonitors.monitoring.coreos.com prometheuses.monitoring.coreos.com prometheusrules.monitoring.coreos.com servicemonitors.monitoring.coreos.com thanosrulers.monitoring.coreos.com
 }
-
 
 $global:monitoringRelName = "prometheus"
 if (($installMonitoring -eq $false -and $uninstallMonitoring -eq $false) -or ($installMonitoring -eq $true -and $uninstallMonitoring -eq $true))
@@ -412,7 +478,7 @@ try {
             Write-Error "Please pass Grafana admin password"
             exit
         }
-        Install-Monitoring -kubeconfigFile $kubeconfigFile -grafanaAdminPasswd $grafanaAdminPasswd -namespace $namespace -forwardingLocalPort $forwardingLocalPort
+        Install-Monitoring -kubeconfigFile $kubeconfigFile -grafanaAdminPasswd $grafanaAdminPasswd -namespace $namespace -forwardingLocalPort $forwardingLocalPort -vmIP $vmIP -sshUser $sshUser -sshKey $sshKey
     }
     elseif ($uninstallMonitoring -eq $true) {
         Uninstall-Monitoring -kubeConfigFile $kubeconfigFile -namespace $namespace
@@ -423,6 +489,5 @@ try {
     }
 }
 catch [Exception] {
-    Write-Error "Exception caught!!!" $_.Exception.Message.ToString()
-        
+    Write-Error "Exception caught!!!" $_.Exception.Message.ToString()      
 }
