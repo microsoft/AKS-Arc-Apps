@@ -65,7 +65,7 @@ function Install-Akri {
     Write-Host "Waiting for Pod 'akri-controller' to be ready."
     while($true) 
     {
-        $result = (Execute-KubeCtl -ignoreError -kubeconfig $kubeconfigFile -arguments $("wait --for=condition=Ready --timeout=5m -n $namespace pod -l app=akri-controller"))
+        $result = (Execute-KubeCtl -ignoreError -kubeconfig $kubeconfigFile -arguments $("wait --for=condition=Ready --timeout=5m -n $namespace pod -l app.kubernetes.io/name=akri-controller"))
         if ($result -ne $null)
         {
             break
